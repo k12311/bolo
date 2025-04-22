@@ -228,7 +228,24 @@
     loadPlans();
     updateHistory();
     if (gameInfo.includes("兄弟")) unlockBadge("supporter");
+    function requestNotificationPermission() {
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        console.log("通知已授權！");
+      } else {
+        console.log("通知未授權。");
+      }
+    });
+  }
+}
+
+// 呼叫函數來要求使用者授權通知權限
+requestNotificationPermission();
+
   </script>
+  <!-- 🔔 賽前提醒音效 -->
+    <audio id="notifySound" src="bgm.mp3" preload="auto"></audio>
 </body>
 </html>
 
