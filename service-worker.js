@@ -1,7 +1,13 @@
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open('brothers-cache').then(cache => {
-      return cache.addAll(['./', './index.html', './icon-192.png', './icon-512.png']);
+      return cache.addAll([
+        './',
+        './index.html',
+        './manifest.json',
+        './icon-192.png',
+        './icon-512.png'
+      ]);
     })
   );
   self.skipWaiting();
