@@ -38,6 +38,7 @@
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdownTimer"></div>
+  <div id="fanDays" style="margin: 1em 0; font-size: 1.1rem; color: #856404;"></div>
 
   <h2>🔔 賽前提醒設定</h2>
   <label for="notifyMins">提醒時間：</label>
@@ -77,6 +78,8 @@
     "2025-04-23": "富邦悍將 vs 中信兄弟（18:35，新莊）"
   };
 
+  const FAN_START_DATE = "2024-11-17";
+
   const today = new Date();
   const y = today.getFullYear();
   const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -103,8 +106,17 @@
     const seconds = Math.floor((diff % 60000) / 1000);
     div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
   }
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+
+  function updateFanDays() {
+    const start = new Date(FAN_START_DATE);
+    const now = new Date();
+    const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
+    if (diffDays >= 365) msg += " 🎉 一週年快樂！";
+    else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
+    else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
+    document.getElementById("fanDays").textContent = msg;
+  }
 
   const audio = document.getElementById("reminderAudio");
 
@@ -138,7 +150,6 @@
   const saved = localStorage.getItem("notifyMins");
   if (saved) document.getElementById("notifyMins").value = saved;
 
-  // === 行程紀錄功能 ===
   function getTodayKey() {
     return `plans-${y}-${m}-${d}`;
   }
@@ -180,7 +191,6 @@
     loadPlans();
   }
 
-  // === 徽章功能 ===
   const badgeData = {
     planner: "🥉 堅持象 - 有紀錄今日行程",
     reminder: "🥈 鬧鐘魂 - 使用過賽前提醒",
@@ -204,9 +214,12 @@
       : "（尚未解鎖）";
   }
 
+  updateCountdown();
+  updateFanDays();
   loadPlans();
   updateBadges();
   if (gameInfo.includes("兄弟")) unlockBadge("supporter");
 </script>
 </body>
 </html>
+
