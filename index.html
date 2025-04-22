@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>兄弟語錄挑戰版</title>
   <link rel="manifest" href="/bolo/manifest.json" />
   <link rel="icon" href="/bolo/icon-192.png" />
@@ -16,18 +16,17 @@
     h1, h2 {
       color: #d48806;
     }
-    #historyList {
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-      background: #fffef0;
-      border: 1px solid #f0c674;
-      padding: 1em;
-      border-radius: 10px;
-      text-align: left;
+    #fanDays {
+      margin: 1em 0;
+      font-size: 1.1rem;
+      color: #856404;
+    }
+    #countdownTimer {
+      font-weight: bold;
+      margin: 1em 0;
+      font-size: 1.2rem;
     }
   </style>
-  <!-- ✅ Firebase compat 版本 -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
@@ -35,16 +34,8 @@
   <h1>中信兄弟每日語錄 🐘</h1>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
+  <div id="countdownTimer"></div>
   <div id="fanDays"></div>
-
-  <h2>📋 我的今日行程</h2>
-  <input type="time" id="timeInput" />
-  <input type="text" id="taskInput" placeholder="輸入行程內容..." />
-  <button onclick="addPlan()">➕</button>
-  <div id="planList"></div>
-
-  <h2>📖 歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示 / 隱藏</button></h2>
-  <div id="historyList">（尚無紀錄）</div>
 
   <script>
     const firebaseConfig = {
@@ -53,18 +44,17 @@
       projectId: "ffjj-67dcf",
       storageBucket: "ffjj-67dcf.appspot.com",
       messagingSenderId: "572382978762",
-      appId: "1:572382978762:web:f185509ed62c2543e5ca33"
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33",
+      measurementId: "G-K4KF8EH19G"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const userId = "guest";
 
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
-    const key = `plans-${y}-${m}-${d}`;
 
     const quotes = [
       "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
@@ -73,80 +63,53 @@
       "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
       "你不孤單，我們一起戰到最後！"
     ];
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[parseInt(y + m + d) % quotes.length]}`;
+    const quote = quotes[parseInt(y + m + d) % quotes.length];
+    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
-    const games = [
+    const futureGames = [
       { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
       { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
       { date: "2025-04-25", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" },
       { date: "2025-04-27", time: "17:05", info: "味全龍 vs 中信兄弟（大巨蛋）" },
       { date: "2025-05-01", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" }
     ];
-    const game = games.find(g => g.date === dateStr);
-    document.getElementById("game").textContent = `📅 今日賽事：${game ? game.info + `（${game.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥"}`;
 
-    const fanStart = new Date("2024-11-17");
-    const diffDays = Math.floor((new Date() - fanStart) / (1000 * 60 * 60 * 24));
-    document.getElementById("fanDays").textContent = `💛 我已經喜歡中信兄弟第 ${diffDays} 天啦！`;
+    const todayGame = futureGames.find(g => g.date === dateStr);
+    const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥";
+    document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
-    function addPlan() {
-      const time = document.getElementById("timeInput").value;
-      const task = document.getElementById("taskInput").value.trim();
-      if (!time || !task) return alert("請輸入時間與行程內容！");
-      db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
-        const oldPlans = doc.exists ? doc.data().plans || [] : [];
-        oldPlans.push({ time, task });
-        db.collection("plans").doc(`${userId}-${key}`).set({ plans: oldPlans }).then(() => {
-          document.getElementById("taskInput").value = "";
-          loadPlans();
-          updateHistory();
-        });
-      });
+    function updateCountdown() {
+      const div = document.getElementById("countdownTimer");
+      if (!todayGame) return div.textContent = "⏳ 今日無比賽";
+
+      const [h, min] = todayGame.time.split(":".map(Number));
+      const target = new Date(`${todayGame.date}T${h}:${min}:00`);
+      const now = new Date();
+      const diff = target - now;
+      if (diff <= 0) return div.textContent = "🏁 比賽已開始！";
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      div.textContent = `⏳ 倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
     }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
 
-    function loadPlans() {
-      db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
-        const plans = doc.exists ? doc.data().plans || [] : [];
-        const list = document.getElementById("planList");
-        list.innerHTML = "";
-        plans.sort((a, b) => a.time.localeCompare(b.time));
-        plans.forEach((p, i) => {
-          const item = document.createElement("div");
-          item.textContent = `🕒 ${p.time}：${p.task}`;
-          item.onclick = () => {
-            if (confirm("刪除這筆行程？")) {
-              plans.splice(i, 1);
-              db.collection("plans").doc(`${userId}-${key}`).set({ plans });
-              loadPlans();
-              updateHistory();
-            }
-          };
-          list.appendChild(item);
-        });
-      });
+    function updateFanDays() {
+      const start = new Date("2024-11-17");
+      const now = new Date();
+      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
+      if (diffDays >= 365) msg += " 🎉 一週年快樂！";
+      else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
+      else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
+      document.getElementById("fanDays").textContent = msg;
     }
-
-    function toggleHistory() {
-      const box = document.getElementById("historyList");
-      box.style.display = box.style.display === "none" ? "block" : "none";
-    }
-
-    function updateHistory() {
-      db.collection("plans").where(firebase.firestore.FieldPath.documentId(), ">=", `${userId}-`)
-        .get().then(snapshot => {
-          let html = "";
-          snapshot.forEach(doc => {
-            const date = doc.id.replace(`${userId}-`, "");
-            const plans = doc.data().plans || [];
-            html += `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>") + "<hr>";
-          });
-          document.getElementById("historyList").innerHTML = html || "（尚無紀錄）";
-        });
-    }
-
-    loadPlans();
-    updateHistory();
+    updateFanDays();
   </script>
+</body>
+</html>
+
 </body>
 </html>
 
