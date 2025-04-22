@@ -16,8 +16,18 @@
     h1, h2 {
       color: #d48806;
     }
+    #historyList {
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      background: #fffef0;
+      border: 1px solid #f0c674;
+      padding: 1em;
+      border-radius: 10px;
+      text-align: left;
+    }
   </style>
-  <!-- ✅ 修正版本 Firebase SDK（compat） -->
+  <!-- ✅ Firebase compat 版本 -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
@@ -25,29 +35,37 @@
   <h1>中信兄弟每日語錄 🐘</h1>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
+  <div id="fanDays"></div>
+
+  <h2>📋 我的今日行程</h2>
+  <input type="time" id="timeInput" />
+  <input type="text" id="taskInput" placeholder="輸入行程內容..." />
+  <button onclick="addPlan()">➕</button>
+  <div id="planList"></div>
+
+  <h2>📖 歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示 / 隱藏</button></h2>
+  <div id="historyList">（尚無紀錄）</div>
 
   <script>
-    // ✅ 初始化 Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
       authDomain: "ffjj-67dcf.firebaseapp.com",
       projectId: "ffjj-67dcf",
       storageBucket: "ffjj-67dcf.appspot.com",
       messagingSenderId: "572382978762",
-      appId: "1:572382978762:web:f185509ed62c2543e5ca33",
-      measurementId: "G-K4KF8EH19G"
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const userId = "guest";
 
-    // ✅ 今日日期字串
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
+    const key = `plans-${y}-${m}-${d}`;
 
-    // ✅ 語錄
     const quotes = [
       "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
       "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
@@ -55,20 +73,80 @@
       "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
       "你不孤單，我們一起戰到最後！"
     ];
-    const quote = quotes[parseInt(y + m + d) % quotes.length];
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
+    document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[parseInt(y + m + d) % quotes.length]}`;
 
-    // ✅ 賽事清單
-    const futureGames = [
+    const games = [
       { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
       { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
       { date: "2025-04-25", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" },
       { date: "2025-04-27", time: "17:05", info: "味全龍 vs 中信兄弟（大巨蛋）" },
       { date: "2025-05-01", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" }
     ];
-    const todayGame = futureGames.find(g => g.date === dateStr);
-    const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥";
-    document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+    const game = games.find(g => g.date === dateStr);
+    document.getElementById("game").textContent = `📅 今日賽事：${game ? game.info + `（${game.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥"}`;
+
+    const fanStart = new Date("2024-11-17");
+    const diffDays = Math.floor((new Date() - fanStart) / (1000 * 60 * 60 * 24));
+    document.getElementById("fanDays").textContent = `💛 我已經喜歡中信兄弟第 ${diffDays} 天啦！`;
+
+    function addPlan() {
+      const time = document.getElementById("timeInput").value;
+      const task = document.getElementById("taskInput").value.trim();
+      if (!time || !task) return alert("請輸入時間與行程內容！");
+      db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+        const oldPlans = doc.exists ? doc.data().plans || [] : [];
+        oldPlans.push({ time, task });
+        db.collection("plans").doc(`${userId}-${key}`).set({ plans: oldPlans }).then(() => {
+          document.getElementById("taskInput").value = "";
+          loadPlans();
+          updateHistory();
+        });
+      });
+    }
+
+    function loadPlans() {
+      db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+        const plans = doc.exists ? doc.data().plans || [] : [];
+        const list = document.getElementById("planList");
+        list.innerHTML = "";
+        plans.sort((a, b) => a.time.localeCompare(b.time));
+        plans.forEach((p, i) => {
+          const item = document.createElement("div");
+          item.textContent = `🕒 ${p.time}：${p.task}`;
+          item.onclick = () => {
+            if (confirm("刪除這筆行程？")) {
+              plans.splice(i, 1);
+              db.collection("plans").doc(`${userId}-${key}`).set({ plans });
+              loadPlans();
+              updateHistory();
+            }
+          };
+          list.appendChild(item);
+        });
+      });
+    }
+
+    function toggleHistory() {
+      const box = document.getElementById("historyList");
+      box.style.display = box.style.display === "none" ? "block" : "none";
+    }
+
+    function updateHistory() {
+      db.collection("plans").where(firebase.firestore.FieldPath.documentId(), ">=", `${userId}-`)
+        .get().then(snapshot => {
+          let html = "";
+          snapshot.forEach(doc => {
+            const date = doc.id.replace(`${userId}-`, "");
+            const plans = doc.data().plans || [];
+            html += `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>") + "<hr>";
+          });
+          document.getElementById("historyList").innerHTML = html || "（尚無紀錄）";
+        });
+    }
+
+    loadPlans();
+    updateHistory();
   </script>
 </body>
 </html>
+
