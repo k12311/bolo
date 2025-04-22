@@ -1,3 +1,4 @@
+GitHub Pages
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -13,15 +14,14 @@
       text-align: center;
       padding: 1rem;
     }
+    h1, h2 {
+      color: #d48806;
+    }
     select, button, input {
       font-size: 1rem;
       padding: 6px 10px;
       border-radius: 8px;
       margin: 0.3em;
-    }
-    h2 {
-      margin-top: 2rem;
-      color: #d48806;
     }
     #countdownTimer {
       font-weight: bold;
@@ -46,42 +46,6 @@
       margin-top: 0.5em;
     }
   </style>
-</head>
-<body>
-  <h1>中信兄弟每日語錄 🐘</h1>
-  <div id="quote">✨ 今日語錄載入中...</div>
-  <div id="game">📅 今日賽事載入中...</div>
-  <div id="countdownTimer"></div>
-  <div id="todayDate"></div>
-  <div id="fanDays" style="margin: 1em 0; font-size: 1.1rem; color: #856404;"></div>
-
-  <h2>🔔 賽前提醒設定</h2>
-  <label for="notifyMins">提醒時間：</label>
-  <select id="notifyMins">
-    <option value="5">5 分鐘前</option>
-    <option value="10">10 分鐘前</option>
-    <option value="15">15 分鐘前</option>
-    <option value="30" selected>30 分鐘前</option>
-    <option value="60">60 分鐘前</option>
-  </select>
-  <button onclick="setNotification()">✅ 啟用提醒</button>
-  <p id="status" style="margin-top: 0.5em;"></p>
-  <audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
-
-  <h2>📋 我的今日行程</h2>
-  <div>
-    <input type="time" id="timeInput" />
-    <input type="text" id="taskInput" placeholder="輸入行程內容..." />
-    <button onclick="addPlan()">➕</button>
-  </div>
-  <div id="planList">（載入中...）</div>
-
-  <h2>📖 我的歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示 / 隱藏</button></h2>
-  <div id="historyList">（尚無紀錄）</div>
-
-  <h2>🏅 我的兄弟魂徽章</h2>
-  <div id="badgeList">（尚未解鎖）</div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -106,90 +70,73 @@
     const d = String(today.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
     const weekday = today.toLocaleDateString('zh-TW', { weekday: 'long' });
-    document.getElementById("todayDate").textContent = `📆 今天是 ${dateStr}（${weekday}）`;
 
-    const quotes = [
-      "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
-      "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
-      "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
-      "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
-      "你不孤單，我們一起戰到最後！"
-    ];
-    const quote = quotes[parseInt(y + m + d) % quotes.length];
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
+    document.addEventListener("DOMContentLoaded", async () => {
+      document.getElementById("todayDate").textContent = `📆 今天是 ${dateStr}（${weekday}）`;
 
-    const futureGames = [
-      { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
-      { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
-      { date: "2025-04-25", time: "18:35", info: "中信兄弟 vs 味全龍（大巨蛋）" },
-      { date: "2025-04-27", time: "17:05", info: "中信兄弟 vs 統一獅（洲際）" },
-      { date: "2025-05-01", time: "18:35", info: "中信兄弟 vs 富邦悍將（新莊）" }
-    ];
-    const todayGame = futureGames.find(g => g.date === dateStr);
-    const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥";
-    document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+      const fanStart = new Date("2024-11-17");
+      const diffDays = Math.floor((today - fanStart) / (1000 * 60 * 60 * 24));
+      let fanMsg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
+      if (diffDays >= 365) fanMsg += " 🎉 一週年快樂！";
+      else if (diffDays >= 100) fanMsg += " 💛 百日兄弟魂持續燃燒中！";
+      else if (diffDays >= 30) fanMsg += " ✨ 滿一個月啦！感動ing～";
+      document.getElementById("fanDays").textContent = fanMsg;
 
-    const audio = document.getElementById("reminderAudio");
-    function setNotification() {
-      Notification.requestPermission().then(p => {
-        if (p !== "granted") return alert("請允許通知才能啟用提醒");
-        const mins = parseInt(document.getElementById("notifyMins").value);
-        localStorage.setItem("notifyMins", mins);
-        document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
-        const timeMatch = gameInfo.match(/\d{2}:\d{2}/);
-        if (!timeMatch) return;
-        const [h, min] = timeMatch[0].split(":" ).map(Number);
-        const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
-        target.setMinutes(target.getMinutes() - mins);
-        const delay = target - new Date();
-        if (delay <= 0) return;
-        setTimeout(() => {
-          new Notification("📣 賽前提醒", { body: gameInfo + " 快開始囉！" });
-          audio.play();
-          unlockBadge("reminder");
-        }, delay);
-      });
-    }
+      const quotes = [
+        "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
+        "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
+        "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
+        "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
+        "你不孤單，我們一起戰到最後！"
+      ];
+      const quote = quotes[parseInt(y + m + d) % quotes.length];
+      document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
-    function updateCountdown() {
-      const div = document.getElementById("countdownTimer");
-      if (!todayGame) {
-        const now = new Date();
-        const nextGame = futureGames.find(g => new Date(`${g.date}T${g.time}`) > now);
-        if (nextGame) {
-          const target = new Date(`${nextGame.date}T${nextGame.time}`);
-          const diff = target - now;
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          div.textContent = `📅 下一場比賽倒數：${days} 天 ${hours} 小時 ${minutes} 分鐘\n🆚 ${nextGame.info}`;
-        } else {
-          div.textContent = "📅 目前無排定賽事";
-        }
-        return;
-      }
-      const [h, min] = todayGame.time.split(":" ).map(Number);
-      const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
-      const now = new Date();
-      const diff = target - now;
-      if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
-    }
+      const games = {
+        "2025-04-22": "統一獅 vs 中信兄弟（台南）",
+        "2025-04-23": "統一獅 vs 中信兄弟（台南）",
+        "2025-04-25": "中信兄弟 vs 味全龍（大巨蛋）",
+        "2025-04-27": "中信兄弟 vs 統一獅（洲際）",
+        "2025-05-01": "中信兄弟 vs 富邦悍將（新莊）"
+      };
+      const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
+      document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
-    async function addPlan() {
-      const time = document.getElementById("timeInput").value;
-      const task = document.getElementById("taskInput").value.trim();
-      if (!time || !task) return alert("請輸入時間與行程內容！");
-      await addDoc(plansRef, { date: dateStr, time, task });
-      document.getElementById("taskInput").value = "";
-    }
+      const audio = document.getElementById("reminderAudio");
+      document.getElementById("setReminderBtn").onclick = () => {
+        Notification.requestPermission().then(p => {
+          if (p !== "granted") return alert("請允許通知才能啟用提醒");
+          const mins = parseInt(document.getElementById("notifyMins").value);
+          const match = gameInfo.match(/\d{2}:\d{2}/);
+          if (!match) return;
+          const [h, min] = match[0].split(":" ).map(Number);
+          const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
+          target.setMinutes(target.getMinutes() - mins);
+          const delay = target - new Date();
+          if (delay <= 0) return;
+          setTimeout(() => {
+            new Notification("📣 賽前提醒", { body: gameInfo + " 快開始囉！" });
+            audio.play();
+            unlockBadge("reminder");
+          }, delay);
+        });
+      };
 
-    function loadPlans() {
-      const q = query(plansRef, where("date", "==", dateStr), orderBy("time"));
-      onSnapshot(q, snapshot => {
+      document.getElementById("addPlanBtn").onclick = async () => {
+        const time = document.getElementById("timeInput").value;
+        const task = document.getElementById("taskInput").value.trim();
+        if (!time || !task) return alert("請輸入時間與行程內容！");
+        await addDoc(plansRef, { date: dateStr, time, task });
+        document.getElementById("taskInput").value = "";
+        unlockBadge("planner");
+      };
+
+      document.getElementById("toggleHistoryBtn").onclick = () => {
+        const box = document.getElementById("historyList");
+        box.style.display = box.style.display === "none" ? "block" : "none";
+      };
+
+      onSnapshot(query(plansRef, where("date", "==", dateStr), orderBy("time")), snapshot => {
         const list = document.getElementById("planList");
         list.innerHTML = "";
         if (snapshot.empty) return list.textContent = "（尚無行程）";
@@ -197,40 +144,36 @@
           const data = docSnap.data();
           const item = document.createElement("div");
           item.textContent = `🕒 ${data.time}：${data.task}`;
-          item.style.cursor = "pointer";
-          item.title = "點擊刪除";
           item.onclick = async () => {
             if (confirm("確定要刪除這筆行程嗎？")) {
               await deleteDoc(doc(db, "plans", docSnap.id));
             }
           };
+          item.style.cursor = "pointer";
+          item.title = "點擊刪除";
           list.appendChild(item);
         });
       });
-    }
 
-    async function updateHistory() {
-      const q = query(plansRef, orderBy("date"), orderBy("time"));
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(query(plansRef, orderBy("date"), orderBy("time")));
       const grouped = {};
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         if (!grouped[data.date]) grouped[data.date] = [];
         grouped[data.date].push(data);
       });
-      const historyDiv = document.getElementById("historyList");
+      const historyList = document.getElementById("historyList");
       const dates = Object.keys(grouped);
-      if (dates.length === 0) return historyDiv.innerHTML = "（尚無紀錄）";
-      historyDiv.innerHTML = dates.map(date => {
-        const items = grouped[date].map(p => `🕒 ${p.time}：${p.task}`).join("<br>");
-        return `<strong>${date}</strong><br>${items}`;
-      }).join("<hr>");
-    }
+      historyList.innerHTML = dates.length
+        ? dates.map(date => {
+            const items = grouped[date].map(p => `🕒 ${p.time}：${p.task}`).join("<br>");
+            return `<strong>${date}</strong><br>${items}`;
+          }).join("<hr>")
+        : "（尚無紀錄）";
 
-    function toggleHistory() {
-      const list = document.getElementById("historyList");
-      list.style.display = list.style.display === "none" ? "block" : "none";
-    }
+      updateBadges();
+      if (gameInfo.includes("兄弟")) unlockBadge("supporter");
+    });
 
     const badgeData = {
       planner: "🥉 堅持象 - 有紀錄今日行程",
@@ -252,18 +195,38 @@
         ? unlocked.map(k => `🏅 ${badgeData[k]}`).join("<br>")
         : "（尚未解鎖）";
     }
-
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-    loadPlans();
-    updateHistory();
-    updateFanDays();
-    updateBadges();
-    if (gameInfo.includes("兄弟")) unlockBadge("supporter");
   </script>
-</body>
-</html>
+</head>
+<body>
+  <h1>中信兄弟每日語錄 🐘</h1>
+  <div id="todayDate"></div>
+  <div id="fanDays"></div>
+  <div id="quote"></div>
+  <div id="game"></div>
+  <div id="countdownTimer"></div>
+  <h2>🔔 賽前提醒</h2>
+  <select id="notifyMins">
+    <option value="5">5 分鐘前</option>
+    <option value="10">10 分鐘前</option>
+    <option value="15">15 分鐘前</option>
+    <option value="30" selected>30 分鐘前</option>
+    <option value="60">60 分鐘前</option>
+  </select>
+  <button id="setReminderBtn">✅ 啟用提醒</button>
+  <audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
 
+  <h2>📋 我的今日行程</h2>
+  <input type="time" id="timeInput">
+  <input type="text" id="taskInput" placeholder="輸入行程內容...">
+  <button id="addPlanBtn">➕ 新增</button>
+  <div id="planList">（載入中...）</div>
+
+  <h2>📖 我的歷史紀錄 <button id="toggleHistoryBtn">👁️ 顯示 / 隱藏</button></h2>
+  <div id="historyList">（尚無紀錄）</div>
+
+  <h2>🏅 我的兄弟魂徽章</h2>
+  <div id="badgeList">（尚未解鎖）</div>
+</body>
 </html>
 
 
