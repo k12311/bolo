@@ -94,10 +94,10 @@
   function updateCountdown() {
     const div = document.getElementById("countdownTimer");
     if (!gameInfo.includes("vs")) return div.textContent = "";
-    const time = gameInfo.match(/\\d{2}:\\d{2}/);
+    const time = gameInfo.match(/\d{2}:\d{2}/);
     if (!time) return;
-    const [h, m] = time[0].split(":").map(Number);
-    const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
+    const [h, min] = time[0].split(":").map(Number);
+    const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
     const now = new Date();
     const diff = target - now;
     if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
@@ -127,11 +127,11 @@
       localStorage.setItem("notifyMins", mins);
       document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
 
-      const time = gameInfo.match(/\\d{2}:\\d{2}/);
+      const time = gameInfo.match(/\d{2}:\d{2}/);
       if (!time) return;
-      const [h, m] = time[0].split(":").map(Number);
-      const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
-      target.setMinutes(target.getMinutes() - mins);
+      const [h, min] = time[0].split(":").map(Number);
+      const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
+      target.target.setMinutes(target.getMinutes() - mins);
 
       const now = new Date();
       const delay = target - now;
@@ -222,4 +222,3 @@
 </script>
 </body>
 </html>
-
