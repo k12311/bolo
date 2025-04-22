@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -8,119 +7,184 @@
   <link rel="manifest" href="/bolo/manifest.json" />
   <link rel="icon" href="/bolo/icon-192.png" />
   <style>
-    #installTip {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #fcd34d;
-      color: #333;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 25px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: none;
-      animation: bounce 1.5s infinite;
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fff9db;
+      text-align: center;
+      padding: 1rem;
     }
-    @keyframes bounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(-10px); }
+    select, button, input {
+      font-size: 1rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin: 0.3em;
+    }
+    h2 {
+      margin-top: 2rem;
+      color: #d48806;
+    }
+    #countdownTimer {
+      font-weight: bold;
+      margin: 1em 0;
+    }
+    #planList {
+      text-align: left;
+      margin-top: 1em;
     }
   </style>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/bolo/service-worker.js', { scope: '/bolo/' }).then(() => {
-        console.log('✅ Service Worker 註冊成功');
-      });
-    }
-  </script>
 </head>
-<body style="background-color: #fff9db; font-family: 'Noto Sans TC', sans-serif; text-align: center; padding: 1rem;">
+<body>
   <h1>中信兄弟每日語錄 🐘</h1>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
-  <div id="countdownTimer" style="margin-top: 0.5em; font-weight: bold;"></div>
-  <div id="fanDays" style="margin-top: 1em; font-size: 1.1rem; color: #856404;"></div>
-  <button id="installBtn" style="margin-top:1em; padding:10px; font-size:1rem; display:none;">📲 安裝兄弟語錄 App</button>
-  <div id="installTip">📲 點這裡安裝兄弟語錄 App！</div>
+  <div id="countdownTimer"></div>
 
-  <script>
-    const quotes = [
-      "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
-      "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
-      "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
-      "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
-      "你不孤單，我們一起戰到最後！"
-    ];
-    const games = {
-      "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）"
-    };
-    const today = new Date();
-    const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
-    const dateStr = `${y}-${m}-${d}`;
-    const seed = parseInt(y + m + d);
-    const quote = quotes[seed % quotes.length];
-    const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
+  <h2>🔔 賽前提醒設定</h2>
+  <label for="notifyMins">提醒時間：</label>
+  <select id="notifyMins">
+    <option value="5">5 分鐘前</option>
+    <option value="10">10 分鐘前</option>
+    <option value="15">15 分鐘前</option>
+    <option value="30" selected>30 分鐘前</option>
+    <option value="60">60 分鐘前</option>
+  </select>
+  <button onclick="setNotification()">✅ 啟用提醒</button>
+  <p id="status" style="margin-top: 0.5em;"></p>
+  <audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
 
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
-    document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+  <h2>📋 我的今日行程</h2>
+  <div>
+    <input type="time" id="timeInput" />
+    <input type="text" id="taskInput" placeholder="輸入行程內容..." />
+    <button onclick="addPlan()">➕</button>
+  </div>
+  <div id="planList"></div>
 
-    function updateCountdown() {
-      const countdownDiv = document.getElementById("countdownTimer");
-      if (!gameInfo.includes("vs")) {
-        countdownDiv.textContent = "";
-        return;
-      }
-      const matchTime = gameInfo.match(/\d{2}:\d{2}/);
-      if (!matchTime) return;
-      const [hour, minute] = matchTime[0].split(":").map(Number);
-      const target = new Date(`${y}-${m}-${d}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`);
+<script>
+  const quotes = [
+    "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
+    "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
+    "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
+    "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
+    "你不孤單，我們一起戰到最後！"
+  ];
+
+  const games = {
+    "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）",
+    "2025-04-23": "富邦悍將 vs 中信兄弟（18:35，新莊）"
+  };
+
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const dateStr = `${y}-${m}-${d}`;
+  const quote = quotes[parseInt(y + m + d) % quotes.length];
+  const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
+
+  document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
+  document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+
+  function updateCountdown() {
+    const div = document.getElementById("countdownTimer");
+    if (!gameInfo.includes("vs")) return div.textContent = "";
+
+    const time = gameInfo.match(/\d{2}:\d{2}/);
+    if (!time) return;
+
+    const [h, m] = time[0].split(":").map(Number);
+    const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
+    const now = new Date();
+    const diff = target - now;
+
+    if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
+
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  const audio = document.getElementById("reminderAudio");
+
+  function setNotification() {
+    Notification.requestPermission().then(p => {
+      if (p !== "granted") return alert("請允許通知才能啟用提醒");
+
+      const mins = parseInt(document.getElementById("notifyMins").value);
+      localStorage.setItem("notifyMins", mins);
+      document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
+
+      const time = gameInfo.match(/\d{2}:\d{2}/);
+      if (!time) return;
+      const [h, m] = time[0].split(":").map(Number);
+      const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
+      target.setMinutes(target.getMinutes() - mins);
+
       const now = new Date();
-      const diff = target - now;
-      if (diff <= 0) {
-        countdownDiv.textContent = "比賽已經開始！加油兄弟！";
-        return;
-      }
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      countdownDiv.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
+      const delay = target - now;
+      if (delay <= 0) return;
 
-    const FAN_START_DATE = "2024-11-17";
-    function updateFanDays() {
-      const start = new Date(FAN_START_DATE);
-      const now = new Date();
-      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
-      document.getElementById("fanDays").textContent = msg;
-    }
-    updateFanDays();
-
-    // beforeinstallprompt 安裝提示
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
-    const tip = document.getElementById('installTip');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-block';
-      tip.style.display = 'block';
-    });
-
-    installBtn.addEventListener('click', () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          deferredPrompt = null;
-          installBtn.style.display = 'none';
-          tip.style.display = 'none';
+      setTimeout(() => {
+        new Notification("📣 賽前提醒", {
+          body: gameInfo + " 快開始囉！"
         });
-      }
+        audio.play();
+      }, delay);
     });
+  }
+
+  const saved = localStorage.getItem("notifyMins");
+  if (saved) document.getElementById("notifyMins").value = saved;
+
+  // 行程紀錄功能
+  function getTodayKey() {
+    return `plans-${y}-${m}-${d}`;
+  }
+
+  function loadPlans() {
+    const key = getTodayKey();
+    const stored = localStorage.getItem(key);
+    const plans = stored ? JSON.parse(stored) : [];
+    plans.sort((a,b)=>a.time.localeCompare(b.time));
+    const list = document.getElementById("planList");
+    list.innerHTML = "";
+    plans.forEach((p, i) => {
+      const item = document.createElement("div");
+      item.textContent = `🕒 ${p.time}：${p.task}`;
+      item.style.cursor = "pointer";
+      item.title = "點擊刪除";
+      item.onclick = () => {
+        if (confirm("確定要刪除這筆行程嗎？")) {
+          plans.splice(i, 1);
+          localStorage.setItem(key, JSON.stringify(plans));
+          loadPlans();
+        }
+      };
+      list.appendChild(item);
+    });
+  }
+
+  function addPlan() {
+    const time = document.getElementById("timeInput").value;
+    const task = document.getElementById("taskInput").value.trim();
+    if (!time || !task) return alert("請輸入時間與行程內容！");
+    const key = getTodayKey();
+    const stored = localStorage.getItem(key);
+    const plans = stored ? JSON.parse(stored) : [];
+    plans.push({ time, task });
+    localStorage.setItem(key, JSON.stringify(plans));
+    document.getElementById("taskInput").value = "";
+    loadPlans();
+  }
+
+  loadPlans();
+</script>
+</body>
+</html>
 
     tip.addEventListener('click', () => installBtn.click());
   </script>
