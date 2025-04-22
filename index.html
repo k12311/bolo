@@ -205,26 +205,27 @@ function loadPlans() {
   });
 }
 
-    function renderPlans(plans) {
-      const list = document.getElementById("planList");
-      list.innerHTML = "";
-      plans.sort((a, b) => a.time.localeCompare(b.time));
-      plans.forEach((p, i) => {
-        const item = document.createElement("div");
-        item.textContent = `🕒 ${p.time}：${p.task}`;
-        item.style.cursor = "pointer";
-        item.title = "點擊刪除";
-        item.onclick = () => {
-          if (confirm("確定要刪除這筆行程嗎？")) {
-            plans.splice(i, 1);
-            db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
-            renderPlans(plans);
-            updateHistory();
-         }
+   function renderPlans(plans) {
+  const list = document.getElementById("planList");
+  list.innerHTML = "";
+  plans.sort((a, b) => a.time.localeCompare(b.time));
+  plans.forEach((p, i) => {
+    const item = document.createElement("div");
+    item.textContent = `🕒 ${p.time}：${p.task}`;
+    item.style.cursor = "pointer";
+    item.title = "點擊刪除";
+    item.onclick = () => {
+      if (confirm("確定要刪除這筆行程嗎？")) {
+        plans.splice(i, 1);
+        db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
+        renderPlans(plans);
+        updateHistory();
+      }
     };
     list.appendChild(item);
   });
 } 
+
     function addPlan() {
       const time = document.getElementById("timeInput").value;
       const task = document.getElementById("taskInput").value.trim();
