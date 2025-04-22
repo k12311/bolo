@@ -7,6 +7,26 @@
   <title>兄弟語錄挑戰版</title>
   <link rel="manifest" href="/bolo/manifest.json" />
   <link rel="icon" href="/bolo/icon-192.png" />
+  <style>
+    #installTip {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fcd34d;
+      color: #333;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      animation: bounce 1.5s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-10px); }
+    }
+  </style>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/bolo/service-worker.js', { scope: '/bolo/' }).then(() => {
@@ -22,6 +42,7 @@
   <div id="countdownTimer" style="margin-top: 0.5em; font-weight: bold;"></div>
   <div id="fanDays" style="margin-top: 1em; font-size: 1.1rem; color: #856404;"></div>
   <button id="installBtn" style="margin-top:1em; padding:10px; font-size:1rem; display:none;">📲 安裝兄弟語錄 App</button>
+  <div id="installTip">📲 點這裡安裝兄弟語錄 App！</div>
 
   <script>
     const quotes = [
@@ -32,8 +53,7 @@
       "你不孤單，我們一起戰到最後！"
     ];
     const games = {
-      "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）",
-      "2025-04-23": "富邦悍將 vs 中信兄弟（18:35，新莊）"
+      "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）"
     };
     const today = new Date();
     const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
@@ -79,20 +99,30 @@
     }
     updateFanDays();
 
+    // beforeinstallprompt 安裝提示
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
+    const tip = document.getElementById('installTip');
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       installBtn.style.display = 'inline-block';
-      installBtn.addEventListener('click', () => {
+      tip.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
           deferredPrompt = null;
           installBtn.style.display = 'none';
+          tip.style.display = 'none';
         });
-      });
+      }
     });
+
+    tip.addEventListener('click', () => installBtn.click());
   </script>
 </body>
 </html>
