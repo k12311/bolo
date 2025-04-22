@@ -128,20 +128,24 @@
       });
     }
 
-    function addPlan() {
-      const time = document.getElementById("timeInput").value;
-      const task = document.getElementById("taskInput").value.trim();
-      if (!time || !task) return alert("請輸入時間與行程內容！");
-      const key = getTodayKey();
-      const plans = JSON.parse(localStorage.getItem(key) || "[]");
-      plans.push({ time, task });
-      localStorage.setItem(key, JSON.stringify(plans));
-      db.collection("plans").doc(`${userId}-${key}`).set({ plans });
+  function addPlan() {
+  const time = document.getElementById("timeInput").value;
+  const task = document.getElementById("taskInput").value.trim();
+  if (!time || !task) return alert("請輸入時間與行程內容！");
+  const key = getTodayKey();
+
+  db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+    const oldPlans = doc.exists ? doc.data().plans || [] : [];
+    oldPlans.push({ time, task });
+    db.collection("plans").doc(`${userId}-${key}`).set({ plans: oldPlans }).then(() => {
       document.getElementById("taskInput").value = "";
       loadPlans();
       updateHistory();
       unlockBadge("planner");
-    }
+    });
+  });
+}
+
 
     function toggleHistory() {
       const list = document.getElementById("historyList");
