@@ -96,8 +96,9 @@
   measurementId: "G-K4KF8EH19G"
 };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const userId = "guest"; // 可替換為登入帳號
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
+
     
     const today = new Date();
     const y = today.getFullYear();
