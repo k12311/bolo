@@ -114,8 +114,9 @@
       "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
       "你不孤單，我們一起戰到最後！"
     ];
-    const quote = quotes[parseInt(y + m + d) % quotes.length];
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
+const quoteIndex = parseInt(`${y}${m}${d}`);
+const quote = quotes[quoteIndex % quotes.length];
+document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
     const futureGames = [
       { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
@@ -197,11 +198,21 @@
     function getTodayKey() {
       return `plans-${y}-${m}-${d}`;
     }
-function loadPlans() {
+unction addPlan() {
+  const time = document.getElementById("timeInput").value;
+  const task = document.getElementById("taskInput").value.trim();
+  if (!time || !task) return alert("請輸入時間與行程內容！");
   const key = getTodayKey();
-  db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+  const docRef = db.collection("plans").doc(`${userId}-${key}`);
+  docRef.get().then(doc => {
     const plans = doc.exists ? doc.data().plans || [] : [];
-    renderPlans(plans);
+    plans.push({ time, task });
+    docRef.set({ plans }).then(() => {
+      document.getElementById("taskInput").value = "";
+      loadPlans();
+      updateHistory();
+      unlockBadge("planner");
+    });
   });
 }
 
