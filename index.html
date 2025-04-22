@@ -134,10 +134,68 @@
 
   updateCountdown();
   setInterval(updateCountdown, 1000); // 每秒自動更新倒數
-</script>
+<script>
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const dateStr = `${y}-${m}-${d}`;
+  const FAN_START_DATE = "2024-11-17";
 
+  // 💬 每日語錄
+  const quotes = [
+    "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
+    "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
+    "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
+    "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
+    "你不孤單，我們一起戰到最後！"
+  ];
+  const quote = quotes[parseInt(y + m + d) % quotes.length];
+  document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
+  // 🗓 未來賽事
+  const futureGames = [
+    { date: "2025-04-24", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
+    { date: "2025-04-25", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
+    { date: "2025-04-27", time: "17:05", info: "中信兄弟 vs 統一獅（洲際）" },
+    { date: "2025-05-01", time: "18:35", info: "中信兄弟 vs 富邦悍將（新莊）" }
+  ];
+  const todayGame = futureGames.find(g => g.date === dateStr);
+  const gameInfo = todayGame
+    ? `${todayGame.info}（${todayGame.time}）`
+    : "今日無比賽，但兄弟魂持續燃燒🔥";
+  document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
+  function updateCountdown() {
+    const div = document.getElementById("countdownTimer");
+
+    if (!todayGame) {
+      const now = new Date();
+      const nextGame = futureGames.find(g => new Date(`${g.date}T${g.time}`) > now);
+      if (nextGame) {
+        const target = new Date(`${nextGame.date}T${nextGame.time}`);
+        const diff = target - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        div.textContent =
+          `📅 下一場比賽倒數：${days} 天 ${hours} 小時 ${minutes} 分鐘\n🆚 ${nextGame.info}`;
+      } else {
+        div.textContent = "📅 目前無排定賽事";
+      }
+      return;
+    }
+
+    const [h, min] = todayGame.time.split(":").map(Number);
+    const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
+    const now = new Date();
+    const diff = target - now;
+    if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
+  }
 
   function updateFanDays() {
     const start = new Date(FAN_START_DATE);
@@ -159,9 +217,9 @@
       localStorage.setItem("notifyMins", mins);
       document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
 
-      const time = gameInfo.match(/\d{2}:\d{2}/);
-      if (!time) return;
-      const [h, min] = time[0].split(":").map(Number);
+      const timeMatch = gameInfo.match(/\d{2}:\d{2}/);
+      if (!timeMatch) return;
+      const [h, min] = timeMatch[0].split(":").map(Number);
       const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
       target.setMinutes(target.getMinutes() - mins);
 
@@ -243,13 +301,15 @@
       : "（尚未解鎖）";
   }
 
+  // 初始執行
   updateCountdown();
-  setInterval(updateCountdown, 1000); // ✅ 每秒自動更新
+  setInterval(updateCountdown, 1000);
   updateFanDays();
   loadPlans();
   updateBadges();
   if (gameInfo.includes("兄弟")) unlockBadge("supporter");
 </script>
+
 </body>
 </html>
 
