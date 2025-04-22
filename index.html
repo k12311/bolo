@@ -60,6 +60,9 @@
   </div>
   <div id="planList"></div>
 
+  <h2>🏅 我的兄弟魂徽章</h2>
+  <div id="badgeList">（尚未解鎖）</div>
+
 <script>
   const quotes = [
     "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
@@ -88,23 +91,18 @@
   function updateCountdown() {
     const div = document.getElementById("countdownTimer");
     if (!gameInfo.includes("vs")) return div.textContent = "";
-
-    const time = gameInfo.match(/\d{2}:\d{2}/);
+    const time = gameInfo.match(/\\d{2}:\\d{2}/);
     if (!time) return;
-
     const [h, m] = time[0].split(":").map(Number);
     const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
     const now = new Date();
     const diff = target - now;
-
     if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
-
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
     div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
   }
-
   updateCountdown();
   setInterval(updateCountdown, 1000);
 
@@ -113,12 +111,11 @@
   function setNotification() {
     Notification.requestPermission().then(p => {
       if (p !== "granted") return alert("請允許通知才能啟用提醒");
-
       const mins = parseInt(document.getElementById("notifyMins").value);
       localStorage.setItem("notifyMins", mins);
       document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
 
-      const time = gameInfo.match(/\d{2}:\d{2}/);
+      const time = gameInfo.match(/\\d{2}:\\d{2}/);
       if (!time) return;
       const [h, m] = time[0].split(":").map(Number);
       const target = new Date(`${y}-${m}-${d}T${h}:${m}:00`);
@@ -133,6 +130,7 @@
           body: gameInfo + " 快開始囉！"
         });
         audio.play();
+        unlockBadge("reminder");
       }, delay);
     });
   }
@@ -140,7 +138,7 @@
   const saved = localStorage.getItem("notifyMins");
   if (saved) document.getElementById("notifyMins").value = saved;
 
-  // 行程紀錄功能
+  // === 行程紀錄功能 ===
   function getTodayKey() {
     return `plans-${y}-${m}-${d}`;
   }
@@ -165,6 +163,7 @@
         }
       };
       list.appendChild(item);
+      unlockBadge("planner");
     });
   }
 
@@ -181,12 +180,33 @@
     loadPlans();
   }
 
-  loadPlans();
-</script>
-</body>
-</html>
+  // === 徽章功能 ===
+  const badgeData = {
+    planner: "🥉 堅持象 - 有紀錄今日行程",
+    reminder: "🥈 鬧鐘魂 - 使用過賽前提醒",
+    supporter: "💛 應援魂 - 比賽日登入網站"
+  };
 
-    tip.addEventListener('click', () => installBtn.click());
-  </script>
+  function unlockBadge(key) {
+    const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
+    if (!unlocked.includes(key)) {
+      unlocked.push(key);
+      localStorage.setItem("badges", JSON.stringify(unlocked));
+    }
+    updateBadges();
+  }
+
+  function updateBadges() {
+    const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
+    const badgeList = document.getElementById("badgeList");
+    badgeList.innerHTML = unlocked.length
+      ? unlocked.map(k => `🏅 ${badgeData[k]}`).join("<br>")
+      : "（尚未解鎖）";
+  }
+
+  loadPlans();
+  updateBadges();
+  if (gameInfo.includes("兄弟")) unlockBadge("supporter");
+</script>
 </body>
 </html>
