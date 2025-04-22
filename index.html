@@ -72,6 +72,7 @@
   const dateStr = `${y}-${m}-${d}`;
   const FAN_START_DATE = "2024-11-17";
 
+  // 💬 每日語錄
   const quotes = [
     "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
     "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
@@ -79,21 +80,10 @@
     "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
     "你不孤單，我們一起戰到最後！"
   ];
-
   const quote = quotes[parseInt(y + m + d) % quotes.length];
-
-  const games = {
-    [dateStr]: "中信兄弟 vs 富邦悍將（23:59，洲際）"
-  };
-  const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
-
   document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
-  document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
-  function updateCountdown() {
-  const div = document.getElementById("countdownTimer");
-
-  // 中信兄弟完整未來賽程（可自行擴充）
+  // 🗓 未來賽事（只要維護這個）
   const futureGames = [
     { date: "2025-04-24", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
     { date: "2025-04-25", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
@@ -101,37 +91,52 @@
     { date: "2025-05-01", time: "18:35", info: "中信兄弟 vs 富邦悍將（新莊）" }
   ];
 
-  // 如果今天沒有比賽，顯示下一場比賽倒數
-  if (!gameInfo.includes("vs")) {
-    const now = new Date();
-    const nextGame = futureGames.find(g => new Date(`${g.date}T${g.time}`) > now);
-    if (nextGame) {
-      const target = new Date(`${nextGame.date}T${nextGame.time}`);
-      const diff = target - now;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      div.textContent =
-        `📅 下一場比賽倒數：${days} 天 ${hours} 小時 ${minutes} 分鐘\n🆚 ${nextGame.info}`;
-    } else {
-      div.textContent = "📅 目前無排定賽事";
+  // 今日是否有比賽
+  const todayGame = futureGames.find(g => g.date === dateStr);
+  const gameInfo = todayGame
+    ? `${todayGame.info}（${todayGame.time}）`
+    : "今日無比賽，但兄弟魂持續燃燒🔥";
+  document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+
+  // ⏳ 倒數計時顯示
+  function updateCountdown() {
+    const div = document.getElementById("countdownTimer");
+
+    if (!todayGame) {
+      // 🔜 找下一場比賽
+      const now = new Date();
+      const nextGame = futureGames.find(g => new Date(`${g.date}T${g.time}`) > now);
+      if (nextGame) {
+        const target = new Date(`${nextGame.date}T${nextGame.time}`);
+        const diff = target - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        div.textContent =
+          `📅 下一場比賽倒數：${days} 天 ${hours} 小時 ${minutes} 分鐘\n🆚 ${nextGame.info}`;
+      } else {
+        div.textContent = "📅 目前無排定賽事";
+      }
+      return;
     }
-    return;
+
+    // ✅ 今日比賽倒數
+    const [h, min] = todayGame.time.split(":").map(Number);
+    const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
+    const now = new Date();
+    const diff = target - now;
+    if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
   }
 
-  // 若今天有比賽，顯示當日倒數
-  const time = gameInfo.match(/\d{2}:\d{2}/);
-  if (!time) return;
-  const [h, min] = time[0].split(":").map(Number);
-  const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
-  const now = new Date();
-  const diff = target - now;
-  if (diff <= 0) return div.textContent = "比賽已經開始！加油兄弟！";
-  const hours = Math.floor(diff / 3600000);
-  const minutes = Math.floor((diff % 3600000) / 60000);
-  const seconds = Math.floor((diff % 60000) / 1000);
-  div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
-}
+  updateCountdown();
+  setInterval(updateCountdown, 1000); // 每秒自動更新倒數
+</script>
+
+
 
 
   function updateFanDays() {
