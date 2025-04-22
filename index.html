@@ -1,14 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>兄弟語錄挑戰版</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
+  <link rel="manifest" href="/bolo/manifest.json" />
+  <link rel="icon" href="/bolo/icon-192.png" />
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(() => {
+      navigator.serviceWorker.register('/bolo/service-worker.js').then(() => {
         console.log('✅ Service Worker 註冊成功');
       });
     }
@@ -20,6 +21,7 @@
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdownTimer" style="margin-top: 0.5em; font-weight: bold;"></div>
   <div id="fanDays" style="margin-top: 1em; font-size: 1.1rem; color: #856404;"></div>
+  <button id="installBtn" style="margin-top:1em; padding:10px; font-size:1rem; display:none;">📲 安裝兄弟語錄 App</button>
 
   <script>
     const quotes = [
@@ -29,7 +31,6 @@
       "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
       "你不孤單，我們一起戰到最後！"
     ];
-
     const games = {
       "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）",
       "2025-04-23": "富邦悍將 vs 中信兄弟（18:35，新莊）",
@@ -38,14 +39,12 @@
       "2025-04-26": "統一獅 vs 中信兄弟（16:05，大巨蛋）",
       "2025-04-27": "統一獅 vs 中信兄弟（15:05，大巨蛋）"
     };
-
     const today = new Date();
     const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
     const dateStr = `${y}-${m}-${d}`;
     const seed = parseInt(y + m + d);
     const quote = quotes[seed % quotes.length];
     const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
-
     document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
     document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
@@ -85,6 +84,25 @@
       document.getElementById("fanDays").textContent = msg;
     }
     updateFanDays();
+
+    // 安裝提示觸發按鈕
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+      installBtn.addEventListener('click', () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('✅ 使用者同意安裝');
+          }
+          deferredPrompt = null;
+          installBtn.style.display = 'none';
+        });
+      });
+    });
   </script>
 </body>
 </html>
