@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>中信兄弟每日語錄</title>
+  <title>兄弟語錄挑戰版</title>
   <link rel="manifest" href="/bolo/manifest.json" />
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Elephant_icon.svg/1024px-Elephant_icon.svg.png" />
+  <link rel="icon" href="/bolo/icon-192.png" />
   <style>
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -13,183 +13,62 @@
       text-align: center;
       padding: 1rem;
     }
-    select, button, input {
-      font-size: 1rem;
-      padding: 6px 10px;
-      border-radius: 8px;
-      margin: 0.3em;
-    }
-    h2 {
-      margin-top: 2rem;
+    h1, h2 {
       color: #d48806;
     }
-    #countdownTimer {
-      font-weight: bold;
-      margin: 1em 0;
-    }
-    #planList, #historyList {
-      text-align: left;
-      margin-top: 1em;
-    }
-    #historyList {
-      display: none;
-      max-height: 300px;
-      overflow-y: auto;
-      background: #fffef0;
-      border: 1px solid #f0c674;
-      padding: 1em;
-      border-radius: 10px;
-    }
-    #todayDate {
-      font-size: 1.2rem;
-      color: #555;
-      margin-top: 0.5em;
-    }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+  <!-- ✅ 修正版本 Firebase SDK（compat） -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <h1>中信兄弟每日語錄 🐘</h1>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
-  <div id="countdownTimer"></div>
-  <div id="todayDate"></div>
-  <div id="fanDays" style="margin: 1em 0; font-size: 1.1rem; color: #856404;"></div>
-
-  <h2>🔔 賽前提醒設定</h2>
-  <label for="notifyMins">提醒時間：</label>
-  <select id="notifyMins">
-    <option value="5">5 分鐘前</option>
-    <option value="10">10 分鐘前</option>
-    <option value="15">15 分鐘前</option>
-    <option value="30" selected>30 分鐘前</option>
-    <option value="60">60 分鐘前</option>
-  </select>
-  <button onclick="setNotification()">✅ 啟用提醒</button>
-  <p id="status" style="margin-top: 0.5em;"></p>
-  <audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
-
-  <h2>📋 我的今日行程</h2>
-  <div>
-    <input type="time" id="timeInput" />
-    <input type="text" id="taskInput" placeholder="輸入行程內容..." />
-    <button onclick="addPlan()">➕</button>
-  </div>
-  <div id="planList"></div>
-
-  <h2>🌝 我的兄弟魂徽章</h2>
-  <div id="badgeList">（尚未解鎖）</div>
 
   <script>
+    // ✅ 初始化 Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
       authDomain: "ffjj-67dcf.firebaseapp.com",
       projectId: "ffjj-67dcf",
       storageBucket: "ffjj-67dcf.appspot.com",
       messagingSenderId: "572382978762",
-      appId: "1:572382978762:web:f185509ed62c2543e5ca33"
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33",
+      measurementId: "G-K4KF8EH19G"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const userId = "guest";
 
+    // ✅ 今日日期字串
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
-    document.getElementById("todayDate").textContent = `📆 今天是 ${dateStr}`;
 
+    // ✅ 語錄
     const quotes = [
-      "兄弟齊心，其利斷金！", "不離不棄，永遠一家！",
-      "勝利屬於堅持到底的人！", "今天流的汗，會是明天的光芒。"
+      "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
+      "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
+      "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
+      "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
+      "你不孤單，我們一起戰到最後！"
     ];
     const quote = quotes[parseInt(y + m + d) % quotes.length];
     document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
+    // ✅ 賽事清單
     const futureGames = [
-      { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（臺南）" }
+      { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
+      { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
+      { date: "2025-04-25", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" },
+      { date: "2025-04-27", time: "17:05", info: "味全龍 vs 中信兄弟（大巨蛋）" },
+      { date: "2025-05-01", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" }
     ];
     const todayGame = futureGames.find(g => g.date === dateStr);
-    const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽";
+    const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥";
     document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
-
-    function getTodayKey() {
-      return `plans-${y}-${m}-${d}`;
-    }
-
-    function addPlan() {
-      const time = document.getElementById("timeInput").value;
-      const task = document.getElementById("taskInput").value.trim();
-      if (!time || !task) return alert("請輸入時間與行程內容！");
-      const key = `${userId}-${getTodayKey()}`;
-      db.collection("plans").doc(key).get().then(doc => {
-        const oldPlans = doc.exists ? doc.data().plans || [] : [];
-        oldPlans.push({ time, task });
-        db.collection("plans").doc(key).set({ plans: oldPlans }).then(() => {
-          document.getElementById("taskInput").value = "";
-          loadPlans();
-        });
-      });
-    }
-
-    function loadPlans() {
-      const key = `${userId}-${getTodayKey()}`;
-      db.collection("plans").doc(key).get().then(doc => {
-        const plans = doc.exists ? doc.data().plans || [] : [];
-        const list = document.getElementById("planList");
-        list.innerHTML = "";
-        plans.sort((a, b) => a.time.localeCompare(b.time));
-        plans.forEach((p, i) => {
-          const item = document.createElement("div");
-          item.textContent = `🕒 ${p.time}：${p.task}`;
-          list.appendChild(item);
-        });
-      });
-    }
-
-    const badgeData = {
-      planner: "🥉 堅持象 - 有紀錄行程",
-      reminder: "🥈 鬧鐘魂 - 啟用提醒"
-    };
-    function unlockBadge(key) {
-      const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
-      if (!unlocked.includes(key)) {
-        unlocked.push(key);
-        localStorage.setItem("badges", JSON.stringify(unlocked));
-        updateBadges();
-      }
-    }
-    function updateBadges() {
-      const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
-      const badgeList = document.getElementById("badgeList");
-      badgeList.innerHTML = unlocked.length
-        ? unlocked.map(k => `🏅 ${badgeData[k]}`).join("<br>")
-        : "（尚未解鎖）";
-    }
-
-    function setNotification() {
-      if (!todayGame) return alert("今天無賽事");
-      Notification.requestPermission().then(p => {
-        if (p !== "granted") return alert("請允許通知");
-        const mins = parseInt(document.getElementById("notifyMins").value);
-        const [h, min] = todayGame.time.split(":".map(Number));
-        const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
-        target.setMinutes(target.getMinutes() - mins);
-        const delay = target - new Date();
-        if (delay <= 0) return;
-        setTimeout(() => {
-          new Notification("\uD83D\uDCE3 \u8CFD\u524D\u63D0\u9192", { body: gameInfo + " 快開始囉！" });
-          document.getElementById("reminderAudio").play();
-          unlockBadge("reminder");
-        }, delay);
-        document.getElementById("status").textContent = `已設定賽前 ${mins} 分鐘提醒`;
-      });
-    }
-
-    updateBadges();
-    loadPlans();
   </script>
 </body>
 </html>
