@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- 簡化版本 index.html，稍後可手動加入完整內容 -->
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>兄弟語錄挑戰版</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log('✅ Service Worker 註冊成功');
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>兄弟語錄挑戰版 🐘</h1>
+  <p>這是一個可以安裝的 PWA App 示範。</p>
+</body>
+</html>
