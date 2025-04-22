@@ -46,6 +46,9 @@
       margin-top: 0.5em;
     }
   </style>
+  <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
 </head>
 <body>
   <h1>中信兄弟每日語錄 🐘</h1>
@@ -83,6 +86,21 @@
   <div id="badgeList">（尚未解鎖）</div>
 
   <script>
+     const firebaseConfig = {
+  apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
+  authDomain: "ffjj-67dcf.firebaseapp.com",
+  projectId: "ffjj-67dcf",
+  storageBucket: "ffjj-67dcf.appspot.com",
+  messagingSenderId: "572382978762",
+  appId: "1:572382978762:web:f185509ed62c2543e5ca33",
+  measurementId: "G-K4KF8EH19G"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const userId = "guest"; // 可替換為登入帳號
+    const docRef = db.collection("plans").doc(`${userId}-${getTodayKey()}`);
+    docRef.set({ plans }, { merge: true });
+
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -182,12 +200,10 @@
       return `plans-${y}-${m}-${d}`;
     }
 
-    function loadPlans() {
-      const key = getTodayKey();
-      let plans = JSON.parse(localStorage.getItem(key) || "[]");
-      plans.sort((a, b) => a.time.localeCompare(b.time));
+    function renderPlans(plans) {
       const list = document.getElementById("planList");
       list.innerHTML = "";
+      plans.sort((a, b) => a.time.localeCompare(b.time));
       plans.forEach((p, i) => {
         const item = document.createElement("div");
         item.textContent = `🕒 ${p.time}：${p.task}`;
@@ -196,11 +212,14 @@
         item.onclick = () => {
           if (confirm("確定要刪除這筆行程嗎？")) {
             plans.splice(i, 1);
-            localStorage.setItem(key, JSON.stringify(plans));
-            loadPlans();
+            db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
+            renderPlans(plans);
             updateHistory();
           }
         };
+        list.appendChild(item);
+      });
+    }
         list.appendChild(item);
         unlockBadge("planner");
       });
@@ -225,14 +244,18 @@
     }
 
     function updateHistory() {
-      const allKeys = Object.keys(localStorage).filter(k => k.startsWith("plans-"));
-      const history = allKeys.map(key => {
-        const date = key.replace("plans-", "");
-        const plans = JSON.parse(localStorage.getItem(key));
-        return `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>");
-      }).join("<hr>");
-      document.getElementById("historyList").innerHTML = history || "（尚無紀錄）";
-    }
+  db.collection("plans").where(firebase.firestore.FieldPath.documentId(), ">=", `${userId}-`)
+    .get().then(snapshot => {
+      let html = "";
+      snapshot.forEach(doc => {
+        const date = doc.id.replace(`${userId}-`, "");
+        const plans = doc.data().plans || [];
+        html += `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>") + "<hr>";
+      });
+      document.getElementById("historyList").innerHTML = html || "（尚無紀錄）";
+    });
+}
+
 
     const badgeData = {
       planner: "🥉 堅持象 - 有紀錄今日行程",
