@@ -2,7 +2,9 @@
   "name": "兄弟語錄挑戰版",
   "short_name": "兄弟語錄",
   "start_url": "/bolo/index.html",
+  "scope": "/bolo/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fff9db",
   "theme_color": "#fcd34d",
   "icons": [
@@ -18,4 +20,5 @@
     }
   ]
 }
+
 
