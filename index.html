@@ -197,6 +197,13 @@
     function getTodayKey() {
       return `plans-${y}-${m}-${d}`;
     }
+function loadPlans() {
+  const key = getTodayKey();
+  db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+    const plans = doc.exists ? doc.data().plans || [] : [];
+    renderPlans(plans);
+  });
+}
 
     function renderPlans(plans) {
       const list = document.getElementById("planList");
@@ -217,7 +224,7 @@
         };
         list.appendChild(item);
       });
-  
+  } 
     function addPlan() {
       const time = document.getElementById("timeInput").value;
       const task = document.getElementById("taskInput").value.trim();
