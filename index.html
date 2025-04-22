@@ -46,15 +46,26 @@
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdown"></div>
   <div id="fanDays"></div>
+  
+  <h2>📋 我的今日行程</h2>
+  <input type="time" id="timeInput">
+  <input type="text" id="taskInput" placeholder="輸入行程內容">
+  <button onclick="addPlan()">➕ 新增行程</button>
+  <div id="planList"></div>
+   <h2>📖 歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示/隱藏</button></h2>
+  <div id="historyList">（尚無紀錄）</div>
 
-  <div id="planList">📋 我的今日行程（尚無紀錄）</div>
   <div id="badgeList">🏅 我的兄弟魂徽章（尚未解鎖）</div>
 
   <script>
+     <script>
     const firebaseConfig = {
       apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
       authDomain: "ffjj-67dcf.firebaseapp.com",
       projectId: "ffjj-67dcf",
+      storageBucket: "ffjj-67dcf.appspot.com",
+      messagingSenderId: "572382978762",
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -73,7 +84,8 @@
       "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
       "你不孤單，我們一起戰到最後！"
     ];
-    document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[parseInt(y + m + d) % quotes.length]}`;
+     const quote = quotes[parseInt(y + m + d) % quotes.length];
+    document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
     const futureGames = [
       { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
