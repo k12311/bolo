@@ -98,9 +98,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const userId = "guest"; // 可替換為登入帳號
-    const docRef = db.collection("plans").doc(`${userId}-${getTodayKey()}`);
-    docRef.set({ plans }, { merge: true });
-
+    
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -219,12 +217,7 @@
         };
         list.appendChild(item);
       });
-    }
-        list.appendChild(item);
-        unlockBadge("planner");
-      });
-    }
-
+  
     function addPlan() {
       const time = document.getElementById("timeInput").value;
       const task = document.getElementById("taskInput").value.trim();
