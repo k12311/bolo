@@ -236,8 +236,9 @@ function loadPlans() {
       plans.push({ time, task });
       localStorage.setItem(key, JSON.stringify(plans));
       document.getElementById("taskInput").value = "";
-      loadPlans();
-      updateHistory();
+     loadPlans();
+     updateHistory();
+      unlockBadge("planner"); // 
     }
 
     function toggleHistory() {
