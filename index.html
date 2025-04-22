@@ -1,15 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>兄弟語錄挑戰版</title>
+
+  <!-- ✅ 1. 修正路徑加上 /bolo/ 確保在 GitHub Pages 子目錄可正確載入 -->
   <link rel="manifest" href="/bolo/manifest.json" />
   <link rel="icon" href="/bolo/icon-192.png" />
+
   <script>
+    // ✅ 2. Service Worker 註冊路徑加入 scope
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/bolo/service-worker.js').then(() => {
+      navigator.serviceWorker.register('/bolo/service-worker.js', { scope: '/bolo/' }).then(() => {
         console.log('✅ Service Worker 註冊成功');
       });
     }
@@ -24,68 +27,33 @@
   <button id="installBtn" style="margin-top:1em; padding:10px; font-size:1rem; display:none;">📲 安裝兄弟語錄 App</button>
 
   <script>
-    const quotes = [
-      "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
-      "今天流的汗，會是明天的光芒。", "用笑容迎接每一次挑戰！",
-      "輸贏之外，我們看到更多的感動。", "不只是一場比賽，是信仰的延續。",
-      "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
-      "你不孤單，我們一起戰到最後！"
-    ];
-    const games = {
-      "2025-04-22": "中信兄弟 vs 統一獅（18:35，洲際）",
-      "2025-04-23": "富邦悍將 vs 中信兄弟（18:35，新莊）",
-      "2025-04-24": "富邦悍將 vs 中信兄弟（18:35，新莊）",
-      "2025-04-25": "統一獅 vs 中信兄弟（18:35，大巨蛋）",
-      "2025-04-26": "統一獅 vs 中信兄弟（16:05，大巨蛋）",
-      "2025-04-27": "統一獅 vs 中信兄弟（15:05，大巨蛋）"
-    };
+    // 原本語錄 + 賽事倒數 + 粉兄弟第幾天邏輯（不變）
+    const quotes = [...]; // ← 略，請留原本內容
+    const games = {...};  // ← 略，請留原本內容
+
     const today = new Date();
     const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
     const dateStr = `${y}-${m}-${d}`;
     const seed = parseInt(y + m + d);
     const quote = quotes[seed % quotes.length];
     const gameInfo = games[dateStr] || "今日無比賽，但兄弟魂持續燃燒🔥";
+
     document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
     document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
     function updateCountdown() {
-      const countdownDiv = document.getElementById("countdownTimer");
-      if (!gameInfo.includes("vs")) {
-        countdownDiv.textContent = "";
-        return;
-      }
-      const matchTime = gameInfo.match(/\d{2}:\d{2}/);
-      if (!matchTime) return;
-      const [hour, minute] = matchTime[0].split(":").map(Number);
-      const target = new Date(`${y}-${m}-${d}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`);
-      const now = new Date();
-      const diff = target - now;
-      if (diff <= 0) {
-        countdownDiv.textContent = "比賽已經開始！加油兄弟！";
-        return;
-      }
-      const hours = Math.floor(diff / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      countdownDiv.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
+      ...
     }
     updateCountdown();
     setInterval(updateCountdown, 1000);
 
     const FAN_START_DATE = "2024-11-17";
     function updateFanDays() {
-      const start = new Date(FAN_START_DATE);
-      const now = new Date();
-      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
-      if (diffDays >= 365) msg += " 🎉 一週年快樂！";
-      else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
-      else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
-      document.getElementById("fanDays").textContent = msg;
+      ...
     }
     updateFanDays();
 
-    // 安裝提示觸發按鈕
+    // ✅ beforeinstallprompt 安裝提示按鈕
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -106,4 +74,5 @@
   </script>
 </body>
 </html>
+
 
