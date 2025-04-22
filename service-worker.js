@@ -2,11 +2,11 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open('brothers-cache').then(cache => {
       return cache.addAll([
-        './',
-        './index.html',
-        './manifest.json',
-        './icon-192.png',
-        './icon-512.png'
+        '/bolo/',
+        '/bolo/index.html',
+        '/bolo/manifest.json',
+        '/bolo/icon-192.png',
+        '/bolo/icon-512.png'
       ]);
     })
   );
@@ -20,3 +20,4 @@ self.addEventListener('fetch', e => {
     })
   );
 });
+
