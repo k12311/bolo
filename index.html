@@ -74,7 +74,7 @@
     <input type="text" id="taskInput" placeholder="輸入行程內容..." />
     <button onclick="addPlan()">➕</button>
   </div>
-  <div id="planList"></div>
+  <div id="planList">（載入中...）</div>
 
   <h2>📖 我的歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示 / 隱藏</button></h2>
   <div id="historyList">（尚無紀錄）</div>
@@ -82,7 +82,24 @@
   <h2>🏅 我的兄弟魂徽章</h2>
   <div id="badgeList">（尚未解鎖）</div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
+      authDomain: "ffjj-67dcf.firebaseapp.com",
+      projectId: "ffjj-67dcf",
+      storageBucket: "ffjj-67dcf.appspot.com",
+      messagingSenderId: "572382978762",
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33",
+      measurementId: "G-K4KF8EH19G"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const plansRef = collection(db, "plans");
+
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, '0');
@@ -102,8 +119,9 @@
     document.getElementById("quote").textContent = `✨ 今日語錄：${quote}`;
 
     const futureGames = [
-      { date: "2025-04-24", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
-      { date: "2025-04-25", time: "18:35", info: "中信兄弟 vs 味全龍（洲際）" },
+      { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
+      { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
+      { date: "2025-04-25", time: "18:35", info: "中信兄弟 vs 味全龍（大巨蛋）" },
       { date: "2025-04-27", time: "17:05", info: "中信兄弟 vs 統一獅（洲際）" },
       { date: "2025-05-01", time: "18:35", info: "中信兄弟 vs 富邦悍將（新莊）" }
     ];
@@ -112,24 +130,19 @@
     document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
 
     const audio = document.getElementById("reminderAudio");
-
     function setNotification() {
       Notification.requestPermission().then(p => {
         if (p !== "granted") return alert("請允許通知才能啟用提醒");
         const mins = parseInt(document.getElementById("notifyMins").value);
         localStorage.setItem("notifyMins", mins);
         document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
-
         const timeMatch = gameInfo.match(/\d{2}:\d{2}/);
         if (!timeMatch) return;
-        const [h, min] = timeMatch[0].split(":").map(Number);
+        const [h, min] = timeMatch[0].split(":" ).map(Number);
         const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
         target.setMinutes(target.getMinutes() - mins);
-
-        const now = new Date();
-        const delay = target - now;
+        const delay = target - new Date();
         if (delay <= 0) return;
-
         setTimeout(() => {
           new Notification("📣 賽前提醒", { body: gameInfo + " 快開始囉！" });
           audio.play();
@@ -155,7 +168,7 @@
         }
         return;
       }
-      const [h, min] = todayGame.time.split(":").map(Number);
+      const [h, min] = todayGame.time.split(":" ).map(Number);
       const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
       const now = new Date();
       const diff = target - now;
@@ -166,56 +179,52 @@
       div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
     }
 
-    function updateFanDays() {
-      const start = new Date("2024-11-17");
-      const now = new Date();
-      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
-      if (diffDays >= 365) msg += " 🎉 一週年快樂！";
-      else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
-      else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
-      document.getElementById("fanDays").textContent = msg;
-    }
-
-    function getTodayKey() {
-      return `plans-${y}-${m}-${d}`;
-    }
-
-    function loadPlans() {
-      const key = getTodayKey();
-      let plans = JSON.parse(localStorage.getItem(key) || "[]");
-      plans.sort((a, b) => a.time.localeCompare(b.time));
-      const list = document.getElementById("planList");
-      list.innerHTML = "";
-      plans.forEach((p, i) => {
-        const item = document.createElement("div");
-        item.textContent = `🕒 ${p.time}：${p.task}`;
-        item.style.cursor = "pointer";
-        item.title = "點擊刪除";
-        item.onclick = () => {
-          if (confirm("確定要刪除這筆行程嗎？")) {
-            plans.splice(i, 1);
-            localStorage.setItem(key, JSON.stringify(plans));
-            loadPlans();
-            updateHistory();
-          }
-        };
-        list.appendChild(item);
-        unlockBadge("planner");
-      });
-    }
-
-    function addPlan() {
+    async function addPlan() {
       const time = document.getElementById("timeInput").value;
       const task = document.getElementById("taskInput").value.trim();
       if (!time || !task) return alert("請輸入時間與行程內容！");
-      const key = getTodayKey();
-      const plans = JSON.parse(localStorage.getItem(key) || "[]");
-      plans.push({ time, task });
-      localStorage.setItem(key, JSON.stringify(plans));
+      await addDoc(plansRef, { date: dateStr, time, task });
       document.getElementById("taskInput").value = "";
-      loadPlans();
-      updateHistory();
+    }
+
+    function loadPlans() {
+      const q = query(plansRef, where("date", "==", dateStr), orderBy("time"));
+      onSnapshot(q, snapshot => {
+        const list = document.getElementById("planList");
+        list.innerHTML = "";
+        if (snapshot.empty) return list.textContent = "（尚無行程）";
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const item = document.createElement("div");
+          item.textContent = `🕒 ${data.time}：${data.task}`;
+          item.style.cursor = "pointer";
+          item.title = "點擊刪除";
+          item.onclick = async () => {
+            if (confirm("確定要刪除這筆行程嗎？")) {
+              await deleteDoc(doc(db, "plans", docSnap.id));
+            }
+          };
+          list.appendChild(item);
+        });
+      });
+    }
+
+    async function updateHistory() {
+      const q = query(plansRef, orderBy("date"), orderBy("time"));
+      const snapshot = await getDocs(q);
+      const grouped = {};
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!grouped[data.date]) grouped[data.date] = [];
+        grouped[data.date].push(data);
+      });
+      const historyDiv = document.getElementById("historyList");
+      const dates = Object.keys(grouped);
+      if (dates.length === 0) return historyDiv.innerHTML = "（尚無紀錄）";
+      historyDiv.innerHTML = dates.map(date => {
+        const items = grouped[date].map(p => `🕒 ${p.time}：${p.task}`).join("<br>");
+        return `<strong>${date}</strong><br>${items}`;
+      }).join("<hr>");
     }
 
     function toggleHistory() {
@@ -223,22 +232,11 @@
       list.style.display = list.style.display === "none" ? "block" : "none";
     }
 
-    function updateHistory() {
-      const allKeys = Object.keys(localStorage).filter(k => k.startsWith("plans-"));
-      const history = allKeys.map(key => {
-        const date = key.replace("plans-", "");
-        const plans = JSON.parse(localStorage.getItem(key));
-        return `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>");
-      }).join("<hr>");
-      document.getElementById("historyList").innerHTML = history || "（尚無紀錄）";
-    }
-
     const badgeData = {
       planner: "🥉 堅持象 - 有紀錄今日行程",
       reminder: "🥈 鬧鐘魂 - 使用過賽前提醒",
       supporter: "💛 應援魂 - 比賽日登入網站"
     };
-
     function unlockBadge(key) {
       const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
       if (!unlocked.includes(key)) {
@@ -247,7 +245,6 @@
       }
       updateBadges();
     }
-
     function updateBadges() {
       const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
       const badgeList = document.getElementById("badgeList");
@@ -258,13 +255,15 @@
 
     updateCountdown();
     setInterval(updateCountdown, 1000);
-    updateFanDays();
-    updateBadges();
     loadPlans();
     updateHistory();
+    updateFanDays();
+    updateBadges();
     if (gameInfo.includes("兄弟")) unlockBadge("supporter");
   </script>
 </body>
+</html>
+
 </html>
 
 
