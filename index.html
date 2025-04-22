@@ -220,11 +220,11 @@ function loadPlans() {
             db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
             renderPlans(plans);
             updateHistory();
-          }
-        };
-        list.appendChild(item);
-      });
-  } 
+         }
+    };
+    list.appendChild(item);
+  });
+} 
     function addPlan() {
       const time = document.getElementById("timeInput").value;
       const task = document.getElementById("taskInput").value.trim();
