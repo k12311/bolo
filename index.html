@@ -16,13 +16,34 @@
     h1, h2 {
       color: #d48806;
     }
-    #badgeList {
-      margin-top: 1rem;
+    #countdownTimer, #fanDays {
+      margin: 1em 0;
       font-size: 1.1rem;
-      color: #d48806;
+      font-weight: bold;
+    }
+    #fanDays {
+      color: #856404;
+    }
+    #planList, #historyList {
+      text-align: left;
+      margin-top: 1em;
+    }
+    #historyList {
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      background: #fffef0;
+      border: 1px solid #f0c674;
+      padding: 1em;
+      border-radius: 10px;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin: 0.3em;
     }
   </style>
-  <!-- Firebase SDK compat 版本 -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
@@ -32,6 +53,15 @@
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdownTimer"></div>
   <div id="fanDays"></div>
+
+  <h2>📋 我的今日行程</h2>
+  <input type="time" id="timeInput">
+  <input type="text" id="taskInput" placeholder="輸入行程內容">
+  <button onclick="addPlan()">➕ 新增行程</button>
+  <div id="planList"></div>
+
+  <h2>📖 歷史紀錄 <button onclick="toggleHistory()">👁️ 顯示/隱藏</button></h2>
+  <div id="historyList">（尚無紀錄）</div>
 
   <h2>🏅 我的兄弟魂徽章</h2>
   <div id="badgeList">（尚未解鎖）</div>
@@ -43,11 +73,11 @@
       projectId: "ffjj-67dcf",
       storageBucket: "ffjj-67dcf.appspot.com",
       messagingSenderId: "572382978762",
-      appId: "1:572382978762:web:f185509ed62c2543e5ca33",
-      measurementId: "G-K4KF8EH19G"
+      appId: "1:572382978762:web:f185509ed62c2543e5ca33"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const userId = "guest";
 
     const today = new Date();
     const y = today.getFullYear();
@@ -78,33 +108,88 @@
 
     function updateCountdown() {
       const div = document.getElementById("countdownTimer");
-      if (!todayGame) return div.textContent = "⏳ 無比賽倒數";
+      if (!todayGame) return div.textContent = "📅 今日無比賽";
       const [h, min] = todayGame.time.split(":".map(Number));
-      const target = new Date(`${dateStr}T${h}:${min}:00`);
+      const target = new Date(`${todayGame.date}T${h}:${min}:00`);
       const now = new Date();
       const diff = target - now;
-      if (diff <= 0) return div.textContent = "⏳ 比賽已開始！";
+      if (diff <= 0) return div.textContent = "比賽已開始！";
       const hours = Math.floor(diff / 3600000);
       const minutes = Math.floor((diff % 3600000) / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
-      div.textContent = `⏳ 倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
+      div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
     }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
 
     function updateFanDays() {
       const start = new Date("2024-11-17");
       const now = new Date();
       const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      let msg = `💛 我已喜歡中信兄弟第 ${diffDays} 天啦！`;
-      if (diffDays >= 365) msg += " 🎉 一週年快樂！";
-      else if (diffDays >= 100) msg += " 💪 百日兄弟魂持續燃燒中！";
-      else if (diffDays >= 30) msg += " ✨ 滿一個月啦！";
-      document.getElementById("fanDays").textContent = msg;
+      document.getElementById("fanDays").textContent = `我已經喜歡中信兄弟第 ${diffDays} 天啦！💛`;
+    }
+    updateFanDays();
+
+    function getTodayKey() {
+      return `plans-${y}-${m}-${d}`;
+    }
+
+    function loadPlans() {
+      db.collection("plans").doc(`${userId}-${getTodayKey()}`).get().then(doc => {
+        const plans = doc.exists ? doc.data().plans || [] : [];
+        renderPlans(plans);
+      });
+    }
+
+    function renderPlans(plans) {
+      const list = document.getElementById("planList");
+      list.innerHTML = "";
+      plans.sort((a, b) => a.time.localeCompare(b.time));
+      plans.forEach((p, i) => {
+        const item = document.createElement("div");
+        item.textContent = `🕒 ${p.time}：${p.task}`;
+        list.appendChild(item);
+      });
+    }
+
+    function addPlan() {
+      const time = document.getElementById("timeInput").value;
+      const task = document.getElementById("taskInput").value.trim();
+      if (!time || !task) return alert("請輸入時間與行程內容");
+      const key = getTodayKey();
+      db.collection("plans").doc(`${userId}-${key}`).get().then(doc => {
+        const oldPlans = doc.exists ? doc.data().plans || [] : [];
+        oldPlans.push({ time, task });
+        db.collection("plans").doc(`${userId}-${key}`).set({ plans: oldPlans }).then(() => {
+          document.getElementById("taskInput").value = "";
+          loadPlans();
+          updateHistory();
+          unlockBadge("planner");
+        });
+      });
+    }
+
+    function toggleHistory() {
+      const list = document.getElementById("historyList");
+      list.style.display = list.style.display === "none" ? "block" : "none";
+    }
+
+    function updateHistory() {
+      db.collection("plans").where(firebase.firestore.FieldPath.documentId(), ">=", `${userId}-`).get().then(snapshot => {
+        let html = "";
+        snapshot.forEach(doc => {
+          const date = doc.id.replace(`${userId}-`, "");
+          const plans = doc.data().plans || [];
+          html += `<strong>${date}</strong><br>` + plans.map(p => `🕒 ${p.time}：${p.task}`).join("<br>") + "<hr>";
+        });
+        document.getElementById("historyList").innerHTML = html || "（尚無紀錄）";
+      });
     }
 
     const badgeData = {
-      fan: "🥇 忠誠魂 - 喜歡超過 30 天",
-      game: "🥈 應援魂 - 比賽日登入",
-      quote: "🥉 信仰魂 - 每日語錄解鎖"
+      planner: "🥉 堅持象 - 有紀錄今日行程",
+      reminder: "🥈 鬧鐘魂 - 使用過賽前提醒",
+      supporter: "💛 應援魂 - 比賽日登入網站"
     };
 
     function unlockBadge(key) {
@@ -124,15 +209,11 @@
         : "（尚未解鎖）";
     }
 
-    // 自動解鎖邏輯
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-    updateFanDays();
+    loadPlans();
     updateBadges();
-    if (todayGame) unlockBadge("game");
-    if (quote) unlockBadge("quote");
-    const days = Math.floor((today - new Date("2024-11-17")) / (1000 * 60 * 60 * 24));
-    if (days >= 30) unlockBadge("fan");
+    updateHistory();
+    if (gameInfo.includes("兄弟")) unlockBadge("supporter");
   </script>
 </body>
 </html>
+
