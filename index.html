@@ -106,6 +106,132 @@ function updateCountdown() {
   const seconds = Math.floor((diff % 60000) / 1000);
   div.textContent = `⏳ 比賽倒數：${hours} 小時 ${minutes} 分 ${seconds} 秒`;
 }
+  function updateFanDays() {
+  const start = new Date(FAN_START_DATE);
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  let msg = `我已經喜歡中信兄弟第 ${diffDays} 天啦！一日兄弟，終身兄弟！`;
+  if (diffDays >= 365) msg += " 🎉 一週年快樂！";
+  else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
+  else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
+  document.getElementById("fanDays").textContent = msg;
+}
+
+function showTodayDate() {
+  const now = new Date();
+  const weekList = ["日", "一", "二", "三", "四", "五", "六"];
+  const dateText = `📅 今天是：${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}（星期${weekList[now.getDay()]}）`;
+  document.getElementById("todayInfo").textContent = dateText;
+}
+
+const audio = document.getElementById("reminderAudio");
+
+function setNotification() {
+  Notification.requestPermission().then(p => {
+    if (p !== "granted") return alert("請允許通知才能啟用提醒");
+    const mins = parseInt(document.getElementById("notifyMins").value);
+    localStorage.setItem("notifyMins", mins);
+    document.getElementById("status").textContent = `⏰ 已設定比賽前 ${mins} 分鐘提醒`;
+
+    const time = gameInfo.match(/\d{2}:\d{2}/);
+    if (!time) return;
+    const [h, min] = time[0].split(":").map(Number);
+    const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
+    target.setMinutes(target.getMinutes() - mins);
+
+    const now = new Date();
+    const delay = target - now;
+    if (delay <= 0) return;
+
+    setTimeout(() => {
+      new Notification("📣 賽前提醒", {
+        body: gameInfo + " 快開始囉！"
+      });
+      audio.play();
+      unlockBadge("reminder");
+    }, delay);
+  });
+}
+
+const saved = localStorage.getItem("notifyMins");
+if (saved) document.getElementById("notifyMins").value = saved;
+
+function getTodayKey() {
+  return `plans-${y}-${m}-${d}`;
+}
+
+function loadPlans() {
+  const key = getTodayKey();
+  const stored = localStorage.getItem(key);
+  const plans = stored ? JSON.parse(stored) : [];
+  plans.sort((a, b) => a.time.localeCompare(b.time));
+  const list = document.getElementById("planList");
+  list.innerHTML = "";
+  plans.forEach((p, i) => {
+    const item = document.createElement("div");
+    item.textContent = `🕒 ${p.time}：${p.task}`;
+    item.style.cursor = "pointer";
+    item.title = "點擊刪除";
+    item.onclick = () => {
+      if (confirm("確定要刪除這筆行程嗎？")) {
+        plans.splice(i, 1);
+        localStorage.setItem(key, JSON.stringify(plans));
+        loadPlans();
+      }
+    };
+    list.appendChild(item);
+    unlockBadge("planner");
+  });
+}
+
+function addPlan() {
+  const time = document.getElementById("timeInput").value;
+  const task = document.getElementById("taskInput").value.trim();
+  if (!time || !task) return alert("請輸入時間與行程內容！");
+  const key = getTodayKey();
+  const stored = localStorage.getItem(key);
+  const plans = stored ? JSON.parse(stored) : [];
+  plans.push({ time, task });
+  localStorage.setItem(key, JSON.stringify(plans));
+  document.getElementById("taskInput").value = "";
+  loadPlans();
+}
+
+const badgeData = {
+  planner: "🥉 堅持象 - 有紀錄今日行程",
+  reminder: "🥈 鬧鐘魂 - 使用過賽前提醒",
+  supporter: "💛 應援魂 - 比賽日登入網站"
+};
+
+function unlockBadge(key) {
+  const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
+  if (!unlocked.includes(key)) {
+    unlocked.push(key);
+    localStorage.setItem("badges", JSON.stringify(unlocked));
+  }
+  updateBadges();
+}
+
+function updateBadges() {
+  const unlocked = JSON.parse(localStorage.getItem("badges") || "[]");
+  const badgeList = document.getElementById("badgeList");
+  badgeList.innerHTML = unlocked.length
+    ? unlocked.map(k => `🏅 ${badgeData[k]}`).join("<br>")
+    : "（尚未解鎖）";
+}
+
+// 初始化功能執行
+updateCountdown();
+setInterval(updateCountdown, 1000);
+showTodayDate();
+updateFanDays();
+loadPlans();
+updateBadges();
+if (gameInfo.includes("兄弟")) unlockBadge("supporter");
+</script>
+</body>
+</html>
+
 
 
 
