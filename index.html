@@ -35,6 +35,7 @@
 </head>
 <body>
   <h1>中信兄弟每日語錄 🐘</h1>
+  <div id="todayInfo" style="margin-bottom: 1em; font-size: 1.1rem;"></div>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdownTimer"></div>
@@ -93,7 +94,7 @@
   function updateCountdown() {
     const div = document.getElementById("countdownTimer");
     if (!gameInfo.includes("vs")) return div.textContent = "";
-    const time = gameInfo.match(/\\d{2}:\\d{2}/) || gameInfo.match(/\d{2}:\d{2}/);
+    const time = gameInfo.match(/\d{2}:\d{2}/);
     if (!time) return;
     const [h, min] = time[0].split(":").map(Number);
     const target = new Date(`${y}-${m}-${d}T${h}:${min}:00`);
@@ -115,6 +116,13 @@
     else if (diffDays >= 100) msg += " 💛 百日兄弟魂持續燃燒中！";
     else if (diffDays >= 30) msg += " ✨ 滿一個月啦！感動ing～";
     document.getElementById("fanDays").textContent = msg;
+  }
+
+  function showTodayDate() {
+    const now = new Date();
+    const weekList = ["日", "一", "二", "三", "四", "五", "六"];
+    const dateText = `📅 今天是：${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}（星期${weekList[now.getDay()]}）`;
+    document.getElementById("todayInfo").textContent = dateText;
   }
 
   const audio = document.getElementById("reminderAudio");
@@ -210,8 +218,9 @@
       : "（尚未解鎖）";
   }
 
+  showTodayDate();
   updateCountdown();
-  setInterval(updateCountdown, 1000); // ✅ 每秒自動更新
+  setInterval(updateCountdown, 1000);
   updateFanDays();
   loadPlans();
   updateBadges();
@@ -219,4 +228,5 @@
 </script>
 </body>
 </html>
+
 
