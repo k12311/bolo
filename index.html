@@ -231,42 +231,16 @@ function scheduleReminder() {
     setTimeout(() => {
       new Notification("📣 比賽提醒", { body: gameInfo });
 
-      // ✅ 播放音效：依照使用者勾選開關
+      // ✅ 播放音效（如果勾選了播放）
       if (document.getElementById("enableSound")?.checked) {
         document.getElementById("reminderAudio").play();
       }
 
+      // ✅ 解鎖提醒徽章
       unlockBadge("reminder");
     }, delay);
   }
 }
-
-function setReminder() {
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      scheduleReminder();
-    } else {
-      alert("請允許通知功能才能啟用提醒！");
-    }
-  });
-}
-
-function scheduleReminder() {
-  const mins = parseInt(document.getElementById("notifyMins").value);
-  document.getElementById("reminderStatus").textContent = `⏰ 提醒已設定：${mins} 分鐘前`;
-  if (!todayGame) return;
-  const [h, m] = todayGame.time.split(":").map(Number);
-  const target = new Date(`${todayGame.date}T${h}:${m}:00`);
-  target.setMinutes(target.getMinutes() - mins);
-  const now = new Date();
-  const delay = target - now;
-  if (delay > 0) setTimeout(() => {
-    new Notification("📣 比賽提醒", { body: gameInfo });
-    document.getElementById("reminderAudio").play();
-    unlockBadge("reminder");
-  }, delay);
-}
-
 
 updateCountdown();
 setInterval(updateCountdown, 1000);
