@@ -39,17 +39,24 @@
   <p id="notifyTip" style="color:red; font-size:0.9rem; display:none;">
     🔔 若無法收到提醒，請確認瀏覽器通知已開啟！
   </p>
+<!-- ⏰ 提醒設定區塊 -->
+<div style="margin: 1.2em auto; padding: 1em; max-width: 320px; border: 2px dashed #f9c74f; background: #fffbea; border-radius: 10px;">
+  <label for="notifyMins" style="font-weight: bold;">⏰ 幾分鐘前提醒：</label>
+  <input type="number" id="notifyMins" value="5" min="1" max="60" style="width: 4em; margin-left: 0.5em;" />
+  <button onclick="setReminder()" style="margin-left: 0.5em;">✅ 設定提醒</button>
+  
+  <br><br>
+  <!-- 🔍 提示：使用者知道可自由輸入 -->
+  <small style="color:gray;">（可自由輸入 1~60 分鐘）</small>
 
+  <br><br>
+  <label style="font-size: 0.9rem;">
+    <input type="checkbox" id="enableSound" checked />
+    播放音效提醒 🔊
+  </label>
 
-  <h2>🔔 賽前提醒設定</h2>
-  <select id="notifyMins">
-    <option value="5">5 分鐘前</option>
-    <option value="10">10 分鐘前</option>
-    <option value="30">30 分鐘前</option>
-  </select>
-  <button onclick="setReminder()">✅ 啟用提醒</button>
-  <p id="reminderStatus"></p>
-  <audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
+  <div id="reminderStatus" style="margin-top: 0.5em; color: green; font-size: 0.9rem;"></div>
+</div>
 
   <h2>📋 今日行程</h2>
   <input type="time" id="timeInput" />
@@ -210,24 +217,47 @@ function updateBadges() {
     : "（尚未解鎖）";
 }
 
-function setReminder() {
-  Notification.requestPermission().then(p => {
-    if (p !== "granted") return alert("請允許通知");
-    const mins = parseInt(document.getElementById("notifyMins").value);
-    document.getElementById("reminderStatus").textContent = `⏰ 提醒已設定：${mins} 分鐘前`;
-    if (!todayGame) return;
-    const [h, m] = todayGame.time.split(":").map(Number);
-    const target = new Date(`${todayGame.date}T${h}:${m}:00`);
-    target.setMinutes(target.getMinutes() - mins);
-    const now = new Date();
-    const delay = target - now;
-    if (delay > 0) setTimeout(() => {
+function scheduleReminder() {
+  const mins = parseInt(document.getElementById("notifyMins").value);
+  document.getElementById("reminderStatus").textContent = `⏰ 提醒已設定：${mins} 分鐘前`;
+  if (!todayGame) return;
+  const [h, m] = todayGame.time.split(":").map(Number);
+  const target = new Date(`${todayGame.date}T${h}:${m}:00`);
+  target.setMinutes(target.getMinutes() - mins);
+  const now = new Date();
+  const delay = target - now;
+
+  if (delay > 0) {
+    setTimeout(() => {
       new Notification("📣 比賽提醒", { body: gameInfo });
-      document.getElementById("reminderAudio").play();
+
+      // ✅ 播放音效：依照使用者勾選開關
+      if (document.getElementById("enableSound")?.checked) {
+        document.getElementById("reminderAudio").play();
+      }
+
       unlockBadge("reminder");
     }, delay);
-  });
+  }
 }
+
+
+function scheduleReminder() {
+  const mins = parseInt(document.getElementById("notifyMins").value);
+  document.getElementById("reminderStatus").textContent = `⏰ 提醒已設定：${mins} 分鐘前`;
+  if (!todayGame) return;
+  const [h, m] = todayGame.time.split(":").map(Number);
+  const target = new Date(`${todayGame.date}T${h}:${m}:00`);
+  target.setMinutes(target.getMinutes() - mins);
+  const now = new Date();
+  const delay = target - now;
+  if (delay > 0) setTimeout(() => {
+    new Notification("📣 比賽提醒", { body: gameInfo });
+    document.getElementById("reminderAudio").play();
+    unlockBadge("reminder");
+  }, delay);
+}
+
 
 updateCountdown();
 setInterval(updateCountdown, 1000);
