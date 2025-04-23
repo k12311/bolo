@@ -241,6 +241,15 @@ function scheduleReminder() {
   }
 }
 
+function setReminder() {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      scheduleReminder();
+    } else {
+      alert("請允許通知功能才能啟用提醒！");
+    }
+  });
+}
 
 function scheduleReminder() {
   const mins = parseInt(document.getElementById("notifyMins").value);
