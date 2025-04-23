@@ -35,6 +35,12 @@
   <div id="countdownTimer"></div>
   <div id="fanDays"></div>
 
+  <!-- 🔔 通知提醒提示（預設隱藏） -->
+  <p id="notifyTip" style="color:red; font-size:0.9rem; display:none;">
+    🔔 若無法收到提醒，請確認瀏覽器通知已開啟！
+  </p>
+
+
   <h2>🔔 賽前提醒設定</h2>
   <select id="notifyMins">
     <option value="5">5 分鐘前</option>
@@ -224,10 +230,18 @@ function setReminder() {
 }
 
 updateCountdown();
+setInterval(updateCountdown, 1000);
+updateFanDays();
+updateBadges();
 loadPlans();
 updateHistory();
-updateBadges();
-if (todayGame) unlockBadge("supporter");
+if (gameInfo.includes("兄弟")) unlockBadge("supporter");
+
+// 🔔 判斷通知是否被封鎖，顯示提示文字
+if (Notification.permission === "denied") {
+  document.getElementById("notifyTip").style.display = "block";
+}
+
 </script>
 </body>
 </html>
