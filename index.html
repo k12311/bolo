@@ -46,17 +46,22 @@
   <button onclick="setReminder()" style="margin-left: 0.5em;">✅ 設定提醒</button>
   
   <br><br>
-  <!-- 🔍 提示：使用者知道可自由輸入 -->
-  <small style="color:gray;">（可自由輸入 1~60 分鐘）</small>
+ <!-- 🔍 提示：使用者知道可自由輸入 -->
+<small style="color:gray;">（可自由輸入 1~60 分鐘）</small>
 
-  <br><br>
-  <label style="font-size: 0.9rem;">
-    <input type="checkbox" id="enableSound" checked />
-    播放音效提醒 🔊
-  </label>
+<br><br>
+<label style="font-size: 0.9rem;">
+  <input type="checkbox" id="enableSound" checked />
+  播放音效提醒 🔊
+</label>
 
-  <div id="reminderStatus" style="margin-top: 0.5em; color: green; font-size: 0.9rem;"></div>
-</div>
+<div id="reminderStatus" style="margin-top: 0.5em; color: green; font-size: 0.9rem;"></div>
+
+<!-- ✅ 補上這一行（音效播放器） -->
+<audio id="reminderAudio" src="bgm.mp3" preload="auto"></audio>
+
+</div> <!-- ← 提醒區塊的結尾 -->
+
 
   <h2>📋 今日行程</h2>
   <input type="time" id="timeInput" />
