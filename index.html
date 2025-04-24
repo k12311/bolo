@@ -44,7 +44,8 @@
   <label for="notifyMins" style="font-weight: bold;">⏰ 幾分鐘前提醒：</label>
   <input type="number" id="notifyMins" value="5" min="1" max="60" style="width: 4em; margin-left: 0.5em;" />
   <button onclick="setReminder()" style="margin-left: 0.5em;">✅ 設定提醒</button>
-  
+  <button onclick="cancelReminder()">❌ 取消提醒</button>
+<p id="reminderStatus"></p>  
   <br><br>
  <!-- 🔍 提示：使用者知道可自由輸入 -->
 <small style="color:gray;">（可自由輸入 1~60 分鐘）</small>
