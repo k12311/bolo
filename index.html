@@ -246,6 +246,9 @@ function scheduleReminder() {
     }, delay);
   }
 }
+function setReminder() {
+  scheduleReminder();
+}
 
 updateCountdown();
 setInterval(updateCountdown, 1000);
