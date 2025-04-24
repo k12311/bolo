@@ -30,6 +30,7 @@
 </head>
 <body>
   <h1>中信兄弟每日語錄 🐘</h1>
+  <p id="todayIs" style="font-weight: bold; color: #d48806;"></p>
   <div id="quote">✨ 今日語錄載入中...</div>
   <div id="game">📅 今日賽事載入中...</div>
   <div id="countdownTimer"></div>
@@ -92,6 +93,11 @@ const y = today.getFullYear();
 const m = String(today.getMonth() + 1).padStart(2, '0');
 const d = String(today.getDate()).padStart(2, '0');
 const dateStr = `${y}-${m}-${d}`;
+const dateStr = `${y}-${m}-${d}`;
+const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+const weekday = weekDays[today.getDay()];
+const zhDate = `今天是 ${y} 年 ${parseInt(m)} 月 ${parseInt(d)} 日（星期${weekday}）`;
+document.getElementById("todayIs").textContent = `📆 ${zhDate}`;
 
 const quotes = [
   "兄弟齊心，其利斷金！", "不離不棄，永遠一家！", "勝利屬於堅持到底的人！",
