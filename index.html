@@ -29,6 +29,30 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+  <nav style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.8em 1.5em; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-family: 'Noto Sans TC', sans-serif; position: sticky; top: 0; z-index: 99;">
+  <div style="display: flex; align-items: center;">
+    <a href="index.html" style="text-decoration: none; display: flex; align-items: center;">
+      <img src="https://upload.wikimedia.org/wikipedia/zh/0/0c/CTBC_Brothers_Logo_2023.png" alt="兄弟LOGO" style="height: 36px; margin-right: 10px;">
+      <strong style="color: #d48806; font-size: 1.2rem;">兄弟語錄</strong>
+    </a>
+  </div>
+  <div style="flex-grow: 1; text-align: center;">
+    <ul style="display: inline-flex; gap: 1.8em; list-style: none; margin: 0; padding: 0; font-size: 0.95rem;">
+      <li style="position: relative;">
+        <a href="#" style="text-decoration: none; color: #444;">⚾ 球員 ▼</a>
+        <ul style="position: absolute; top: 100%; left: 0; background: #fff; list-style: none; padding: 0.5em; margin: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: none; z-index: 10;">
+          <li><a href="players-1st.html" style="display: block; padding: 0.3em 1em; text-decoration: none; color: #444;">🥇 一軍球員</a></li>
+          <li><a href="players-2nd.html" style="display: block; padding: 0.3em 1em; text-decoration: none; color: #444;">🥈 二軍球員</a></li>
+        </ul>
+      </li>
+      <li><a href="cheer.html" style="text-decoration: none; color: #444;">💃 啦啦隊</a></li>
+      <li><a href="diary.html" style="text-decoration: none; color: #444;">📖 日記</a></li>
+      <li><a href="photos.html" style="text-decoration: none; color: #444;">🖼️ 紀錄</a></li>
+      <li><a href="games.html" style="text-decoration: none; color: #d48806; font-weight: bold;">📅 全部賽事</a></li>
+    </ul>
+  </div>
+  <div style="width: 100px;"></div>
+</nav>
   <h1>中信兄弟每日語錄 🐘</h1>
   <p id="todayIs" style="font-weight: bold; color: #d48806;"></p>
   <div id="quote">✨ 今日語錄載入中...</div>
