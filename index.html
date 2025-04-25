@@ -189,7 +189,9 @@ const quotes = [
   "做彼此的後盾，就是兄弟。", "一日兄弟，終身兄弟。",
   "你不孤單，我們一起戰到最後！"
 ];
-document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[parseInt(y + m + d) % quotes.length]}`;
+const quoteIndex = (y * 10000 + parseInt(m) * 100 + parseInt(d)) % quotes.length;
+document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[quoteIndex]}`;
+
 
 const futureGames = [
   { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
