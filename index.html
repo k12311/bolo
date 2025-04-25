@@ -6,105 +6,117 @@
   <title>兄弟語錄挑戰版</title>
   <link rel="manifest" href="/bolo/manifest.json" />
   <link rel="icon" href="/bolo/icon-192.png" />
- <style>
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    background: #fff9db;
-    text-align: center;
-    padding: 1rem;
-  }
-  h1, h2 {
-    color: #d48806;
-  }
-  select, button, input {
-    font-size: 1rem;
-    padding: 6px 10px;
-    border-radius: 8px;
-    margin: 0.3em;
-  }
-  #countdownTimer, #fanDays {
-    font-weight: bold;
-    margin: 1em 0;
-    color: #856404;
-  }
-  #planList, #historyList {
-    text-align: left;
-    margin-top: 1em;
-  }
-  #historyList {
-    display: none;
-    max-height: 300px;
-    overflow-y: auto;
-    background: #fffef0;
-    border: 1px solid #f0c674;
-    padding: 1em;
-    border-radius: 10px;
-  }
-  #badgeList {
-    margin-top: 1em;
-    color: #d48806;
-  }
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fff9db;
+      text-align: center;
+      padding: 1rem;
+      margin: 0;
+    }
 
-  /* ✅ 下拉選單樣式 */
-  nav li:hover ul {
-    display: block;
-  }
-  nav ul li {
-  position: relative;
-}
+    /* ✅ 導覽列樣式 */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 0.8em 1.5em;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+    }
 
-nav li ul {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: #fff;
-  list-style: none;
-  padding: 0.5em;
-  margin: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  z-index: 10;
-  transition: all 0.2s ease; /* ✅ 滑動顯示更順 */
-}
+    nav ul {
+      display: inline-flex;
+      gap: 1.8em;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 0.95rem;
+    }
 
-nav li:hover ul {
-  display: block;
-}
+    nav ul li {
+      position: relative;
+    }
 
-nav li ul li:hover {
-  background-color: #f9f9f9;
-}
+    nav ul li a {
+      text-decoration: none;
+      color: #444;
+    }
 
-</style>
+    nav li ul {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fffef5;
+      list-style: none;
+      padding: 0.5em;
+      margin: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    nav li:hover ul {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    nav li ul li {
+      padding: 0;
+    }
+
+    nav li ul li a {
+      display: block;
+      padding: 0.4em 1em;
+      color: #444;
+    }
+
+    nav li ul li:hover {
+      background-color: #fff2d9;
+    }
+  </style>
 </head>
 <body>
-  <nav style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.8em 1.5em; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-family: 'Noto Sans TC', sans-serif; position: sticky; top: 0; z-index: 99;">
+
+<!-- ✅ 導覽列 -->
+<nav>
+  <!-- 左：LOGO -->
   <div style="display: flex; align-items: center;">
     <a href="index.html" style="text-decoration: none; display: flex; align-items: center;">
       <img src="https://upload.wikimedia.org/wikipedia/zh/0/0c/CTBC_Brothers_Logo_2023.png" alt="兄弟LOGO" style="height: 36px; margin-right: 10px;">
       <strong style="color: #d48806; font-size: 1.2rem;">兄弟語錄</strong>
     </a>
   </div>
+
+  <!-- 中：導覽項目 -->
   <div style="flex-grow: 1; text-align: center;">
-    <ul style="display: inline-flex; gap: 1.8em; list-style: none; margin: 0; padding: 0; font-size: 0.95rem;">
+    <ul>
       <li style="position: relative;">
-        <a href="#" style="text-decoration: none; color: #444;">⚾ 球員 ▼</a>
-        <ul style="position: absolute; top: 100%; left: 0; background: #fff; list-style: none; padding: 0.5em; margin: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: none; z-index: 10;">
-          <li><a href="players-1st.html" style="display: block; padding: 0.3em 1em; text-decoration: none; color: #444;">🥇 一軍球員</a></li>
-          <li><a href="players-2nd.html" style="display: block; padding: 0.3em 1em; text-decoration: none; color: #444;">🥈 二軍球員</a></li>
+        <a href="#">⚾ 球員 ▼</a>
+        <ul>
+          <li><a href="players-1st.html">🥇 一軍球員</a></li>
+          <li><a href="players-2nd.html">🥈 二軍球員</a></li>
         </ul>
       </li>
-      <li><a href="cheer.html" style="text-decoration: none; color: #444;">💃 啦啦隊</a></li>
-      <li><a href="diary.html" style="text-decoration: none; color: #444;">📖 日記</a></li>
-      <li><a href="photos.html" style="text-decoration: none; color: #444;">🖼️ 紀錄</a></li>
-      <li><a href="games.html" style="text-decoration: none; color: #d48806; font-weight: bold;">📅 全部賽事</a></li>
+      <li><a href="cheer.html">💃 啦啦隊</a></li>
+      <li><a href="diary.html">📖 日記</a></li>
+      <li><a href="photos.html">🖼️ 紀錄</a></li>
+      <li><a href="games.html" style="color: #d48806; font-weight: bold;">📅 全部賽事</a></li>
     </ul>
   </div>
+
+  <!-- 右：預留空間 -->
   <div style="width: 100px;"></div>
 </nav>
+
   <h1>中信兄弟每日語錄 🐘</h1>
   <p id="todayIs" style="font-weight: bold; color: #d48806;"></p>
   <div id="quote">✨ 今日語錄載入中...</div>
