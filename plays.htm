@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝 日記 - 兄弟語錄挑戰版</title>
+  <title>📝 比賽日記 - 兄弟語錄挑戰版</title>
   <link rel="icon" href="icon-192.png" />
 
   <style>
@@ -18,15 +18,14 @@
       color: #d48806;
       margin-bottom: 1rem;
     }
-    textarea {
+    input, textarea {
       width: 90%;
       max-width: 500px;
-      height: 150px;
       padding: 10px;
       font-size: 1rem;
+      margin: 5px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
-      resize: vertical;
     }
     button {
       padding: 8px 16px;
@@ -71,36 +70,53 @@
   </div>
 </nav>
 
-<!-- 📝 日記內容 -->
-<h1>📝 今日小日記</h1>
-<textarea id="diaryInput" placeholder="寫下今天的心情吧..."></textarea><br>
-<button onclick="saveDiary()">💾 儲存日記</button>
+<!-- 📝 比賽日記內容 -->
+<h1>📝 比賽記錄</h1>
+<input type="date" id="gameDate" /><br>
+<input type="text" id="gameTeams" placeholder="輸入對戰隊伍 (例如：中信兄弟 vs 統一獅)" /><br>
+<input type="text" id="gameScore" placeholder="輸入比數 (例如：5:3)" /><br>
+<textarea id="gameNotes" placeholder="心得或特別感想 (選填)"></textarea><br>
+<button onclick="saveDiary()">💾 儲存比賽紀錄</button>
 
 <div id="diaryList"></div>
 
 <script>
-// 讀取日記
+// 讀取比賽紀錄
 function loadDiary() {
-  const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
   const diaryList = document.getElementById('diaryList');
   diaryList.innerHTML = diaries.map(d => `
     <div class="diary-item">
-      <strong>${d.date}</strong><br>
-      ${d.text}
+      <strong>📅 ${d.date}</strong><br>
+      🆚 ${d.teams}<br>
+      🏟️ 比數：${d.score}<br>
+      ${d.notes ? `📝 心得：${d.notes}` : ''}
     </div>
   `).join('');
 }
 
-// 儲存日記
+// 儲存比賽紀錄
 function saveDiary() {
-  const text = document.getElementById('diaryInput').value.trim();
-  if (!text) return alert('請寫些內容喔！');
-  const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  diaries.unshift({ date: dateStr, text });
-  localStorage.setItem('diaries', JSON.stringify(diaries));
-  document.getElementById('diaryInput').value = '';
+  const date = document.getElementById('gameDate').value;
+  const teams = document.getElementById('gameTeams').value.trim();
+  const score = document.getElementById('gameScore').value.trim();
+  const notes = document.getElementById('gameNotes').value.trim();
+
+  if (!date || !teams || !score) {
+    alert('請填寫比賽日期、對戰隊伍和比數！');
+    return;
+  }
+
+  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+  diaries.unshift({ date, teams, score, notes });
+  localStorage.setItem('gameDiaries', JSON.stringify(diaries));
+
+  // 清空輸入
+  document.getElementById('gameDate').value = '';
+  document.getElementById('gameTeams').value = '';
+  document.getElementById('gameScore').value = '';
+  document.getElementById('gameNotes').value = '';
+
   loadDiary();
 }
 
@@ -110,4 +126,5 @@ loadDiary();
 
 </body>
 </html>
+
 
