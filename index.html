@@ -32,6 +32,39 @@
   </style>
 </head>
 <body>
+<!-- 🔝 導覽列 -->
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/bolo/index.html">🏠 主頁</a>
+    <a href="plars.htm">📅 賽程</a>
+    <a href="plays.htm">📝 日記</a>
+    <a href="players.html">🏅 球員</a>
+    <a href="cheers.html">📖 啦啦隊</a>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    font-family: 'Noto Sans TC', sans-serif;
+    flex-wrap: wrap;
+  }
+  .nav-left a {
+    margin: 0 15px;
+    font-size: 16px;
+    color: #444;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-left a:hover {
+    color: #d48806;
+  }
+</style>
 
 <h1>中信兄弟每日語錄 🐘</h1>
 <p id="todayIs"></p>
@@ -150,26 +183,35 @@ function renderPlans(plans) {
     const div = document.createElement("div");
     div.textContent = `🕒 ${p.time}：${p.task}`;
     div.title = "點一下編輯，點兩下刪除";
+    let clickTimer = null;
+
     div.onclick = () => {
-      const newTask = prompt("編輯行程內容：", p.task);
-      if (newTask) {
-        plans[i].task = newTask;
-        db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
-        renderPlans(plans);
-      }
+      if (clickTimer) return;
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        const newTask = prompt("編輯行程內容：", p.task);
+        if (newTask) {
+          plans[i].task = newTask;
+          db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
+          renderPlans(plans);
+        }
+      }, 250);
     };
+
     div.ondblclick = () => {
+      clearTimeout(clickTimer);
+      clickTimer = null;
       if (confirm("是否刪除此行程？")) {
         plans.splice(i, 1);
         db.collection("plans").doc(`${userId}-${getTodayKey()}`).set({ plans });
         renderPlans(plans);
       }
     };
-    div.onmouseenter = () => speechSynthesis.speak(new SpeechSynthesisUtterance(p.task));
+
     list.appendChild(div);
   });
-  unlockBadge("planner");
 }
+
 function addPlan() {
   const time = document.getElementById("timeInput").value;
   const task = document.getElementById("taskInput").value.trim();
@@ -268,5 +310,8 @@ if (Notification.permission === "denied") {
 
 </body>
 </html>
+
+
+
 
 
