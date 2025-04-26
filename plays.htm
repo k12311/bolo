@@ -1,96 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝 比賽日記 - 兄弟語錄挑戰版</title>
-  <link rel="icon" href="icon-192.png" />
-
-  <style>
-    body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #fff9db;
-      text-align: center;
-      padding: 1rem;
-      margin: 0;
-    }
-    h1 {
-      color: #d48806;
-      margin-bottom: 1rem;
-    }
-    input, textarea {
-      width: 90%;
-      max-width: 500px;
-      padding: 10px;
-      font-size: 1rem;
-      margin: 5px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      margin-top: 10px;
-      background: #fadb14;
-      color: #333;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #ffe58f;
-    }
-    #diaryList {
-      margin-top: 2rem;
-      text-align: left;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .diary-item {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-  </style>
-</head>
-<body>
-
-<!-- 🔝 導覽列 -->
-<nav class="navbar">
-  <div class="nav-left">
-    <a href="index.html">🏠 主頁</a>
-    <a href="plars.htm">📅 賽程</a>
-    <a href="plays.htm">📝 日記</a>
-    <a href="players.html">🏅 球員</a>
-    <a href="cheers.html">📖 啦啦隊</a>
-  </div>
-</nav>
-
-<!-- 📝 比賽日記內容 -->
-<h1>📝 比賽記錄</h1>
-<input type="date" id="gameDate" /><br>
-<input type="text" id="gameTeams" placeholder="輸入對戰隊伍 (例如：中信兄弟 vs 統一獅)" /><br>
-<input type="text" id="gameScore" placeholder="輸入比數 (例如：5:3)" /><br>
-<textarea id="gameNotes" placeholder="心得或特別感想 (選填)"></textarea><br>
-<button onclick="saveDiary()">💾 儲存比賽紀錄</button>
-
-<div id="diaryList"></div>
-
 <script>
 // 讀取比賽紀錄
 function loadDiary() {
   const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
   const diaryList = document.getElementById('diaryList');
-  diaryList.innerHTML = diaries.map(d => `
+  diaryList.innerHTML = diaries.map((d, index) => `
     <div class="diary-item">
       <strong>📅 ${d.date}</strong><br>
       🆚 ${d.teams}<br>
       🏟️ 比數：${d.score}<br>
-      ${d.notes ? `📝 心得：${d.notes}` : ''}
+      ${d.notes ? `📝 心得：${d.notes}<br>` : ''}
+      <button onclick="deleteDiary(${index})" style="margin-top:8px;">🗑️ 刪除</button>
     </div>
   `).join('');
 }
@@ -118,6 +37,16 @@ function saveDiary() {
   document.getElementById('gameNotes').value = '';
 
   loadDiary();
+}
+
+// 刪除比賽紀錄
+function deleteDiary(index) {
+  if (confirm('確定要刪除這場比賽記錄嗎？')) {
+    const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+    diaries.splice(index, 1);
+    localStorage.setItem('gameDiaries', JSON.stringify(diaries));
+    loadDiary();
+  }
 }
 
 // 初始化
