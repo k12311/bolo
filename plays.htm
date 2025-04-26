@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📝 日記 - 兄弟語錄挑戰版</title>
+  <link rel="icon" href="icon-192.png" />
+
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fff9db;
+      text-align: center;
+      padding: 1rem;
+      margin: 0;
+    }
+    h1 {
+      color: #d48806;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 90%;
+      max-width: 500px;
+      height: 150px;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+      background: #fadb14;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #ffe58f;
+    }
+    #diaryList {
+      margin-top: 2rem;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .diary-item {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<!-- 🔝 導覽列 -->
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="index.html">🏠 主頁</a>
+    <a href="plars.htm">📅 賽程</a>
+    <a href="plays.htm">📝 日記</a>
+    <a href="players.html">🏅 球員</a>
+    <a href="cheers.html">📖 啦啦隊</a>
+  </div>
+</nav>
+
+<!-- 📝 日記內容 -->
+<h1>📝 今日小日記</h1>
+<textarea id="diaryInput" placeholder="寫下今天的心情吧..."></textarea><br>
+<button onclick="saveDiary()">💾 儲存日記</button>
+
+<div id="diaryList"></div>
+
+<script>
+// 讀取日記
+function loadDiary() {
+  const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+  const diaryList = document.getElementById('diaryList');
+  diaryList.innerHTML = diaries.map(d => `
+    <div class="diary-item">
+      <strong>${d.date}</strong><br>
+      ${d.text}
+    </div>
+  `).join('');
+}
+
+// 儲存日記
+function saveDiary() {
+  const text = document.getElementById('diaryInput').value.trim();
+  if (!text) return alert('請寫些內容喔！');
+  const diaries = JSON.parse(localStorage.getItem('diaries') || '[]');
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  diaries.unshift({ date: dateStr, text });
+  localStorage.setItem('diaries', JSON.stringify(diaries));
+  document.getElementById('diaryInput').value = '';
+  loadDiary();
+}
+
+// 初始化
+loadDiary();
+</script>
+
+</body>
+</html>
+
