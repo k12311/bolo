@@ -33,9 +33,10 @@
 </head>
 <body>
 <!-- 🔝 導覽列 -->
+<!-- 🔝 導覽列 -->
 <nav class="navbar">
   <div class="nav-left">
-    <a href="/bolo/index.html">🏠 主頁</a>
+    <a href="index.html">🏠 主頁</a>
     <a href="plars.htm">📅 賽程</a>
     <a href="plays.htm">📝 日記</a>
     <a href="players.html">🏅 球員</a>
@@ -44,6 +45,32 @@
 </nav>
 
 <style>
+  .navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    font-family: 'Noto Sans TC', sans-serif;
+    flex-wrap: wrap;
+  }
+  .nav-left a {
+    margin: 0 12px;
+    font-size: 16px;
+    color: #444;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .nav-left a:hover {
+    background: #fff9db;
+    color: #d48806;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+</style>
+
   .navbar {
     display: flex;
     justify-content: center;
