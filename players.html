@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📝 比賽日記 - 兄弟語錄挑戰版</title>
+  <link rel="icon" href="icon-192.png">
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; background: #fff9db; text-align: center; padding: 1rem; margin: 0; }
+    h1, h2 { color: #d48806; margin-bottom: 1rem; }
+    input, select, textarea { width: 90%; max-width: 500px; padding: 8px; font-size: 0.95rem; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; }
+    #brothersScore, #opponentScore { width: 40%; font-size: 0.9rem; }
+    button { padding: 8px 16px; font-size: 1rem; border: none; border-radius: 8px; margin: 5px; background: #fadb14; color: #333; cursor: pointer; transition: background 0.3s; }
+    button:hover { background: #ffe58f; }
+    #diaryList { margin-top: 2rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .diary-item { background: #fff; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .navbar { display: flex; justify-content: center; align-items: center; background: #ffffff; border-bottom: 1px solid #ddd; padding: 10px 0; flex-wrap: wrap; }
+    .nav-left a { margin: 0 12px; font-size: 16px; color: #444; text-decoration: none; transition: all 0.3s ease; padding: 6px 10px; border-radius: 8px; }
+    .nav-left a:hover { background: #fff9db; color: #d48806; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .nav-left a.active { background: #ffe58f; color: #d48806; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="index.html">🏠 主頁</a>
+    <a href="plars.htm">🗕️ 賽程</a>
+    <a href="plays.htm">📝 日記</a>
+    <a href="players.html">🏅 球員</a>
+    <a href="cheers.html">📖 啦啦隊</a>
+  </div>
+</nav>
+<h2>📊 勝敗統計</h2>
+<div id="stats" style="margin-bottom:1rem; font-weight:bold; background:#fff7e6; padding:10px; border-radius:8px; color:#d48806;">勝場 0 | 敗場 0 | 平手 0</div>
+<h2>🔎 搜尋比賽紀錄</h2>
+<input type="text" id="searchInput" placeholder="輸入隊伍或比數關鍵字..." oninput="searchDiary()">
+<button onclick="downloadDiary()">📅 下載所有日記 (.txt)</button>
+<h1>📝 比賽記錄</h1>
+<input type="date" id="gameDate"><br>
+<select id="gameTeams">
+  <option value="">選擇對戰隊伍</option>
+  <option value="中信兄弟(主) vs 統一獅">中信兄弟(主) vs 統一獅</option>
+  <option value="中信兄弟(主) vs 味全龍">中信兄弟(主) vs 味全龍</option>
+  <option value="中信兄弟(主) vs 富邦悍將">中信兄弟(主) vs 富邦悍將</option>
+  <option value="中信兄弟(主) vs 樂天桃猿">中信兄弟(主) vs 樂天桃猿</option>
+  <option value="中信兄弟(主) vs 台鋼雄鷹">中信兄弟(主) vs 台鋼雄鷹</option>
+  <option value="統一獅 vs 中信兄弟(客)">統一獅 vs 中信兄弟(客)</option>
+  <option value="味全龍 vs 中信兄弟(客)">味全龍 vs 中信兄弟(客)</option>
+  <option value="富邦悍將 vs 中信兄弟(客)">富邦悍將 vs 中信兄弟(客)</option>
+  <option value="樂天桃猿 vs 中信兄弟(客)">樂天桃猿 vs 中信兄弟(客)</option>
+  <option value="台鋼雄鷹 vs 中信兄弟(客)">台鋼雄鷹 vs 中信兄弟(客)</option>
+</select><br>
+<input type="number" id="brothersScore" placeholder="兄弟得分">
+<input type="number" id="opponentScore" placeholder="對手得分"><br>
+<textarea id="gameNotes" placeholder="心得或特別感想 (選填)"></textarea><br>
+<input type="file" id="gamePhoto" accept="image/*"><br>
+<button onclick="saveDiary()">💾 儲存比賽紀錄</button>
+<div id="diaryList"></div>
+<div id="photoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content:center; align-items:center; flex-direction:column; z-index:9999;">
+  <img id="modalImage" src="" style="max-width:90%; max-height:80%; border:5px solid white; border-radius:12px; margin-bottom:20px;">
+  <div>
+    <button onclick="prevPhoto()">⬅️ 上一張</button>
+    <button onclick="nextPhoto()">➡️ 下一張</button>
+  </div>
+</div>
+<script>
+let currentPhotoIndex = 0;
+let currentPhotoList = [];
+
+function saveDiary() {
+  const date = document.getElementById('gameDate').value;
+  const teams = document.getElementById('gameTeams').value;
+  const brotherScore = document.getElementById('brothersScore').value.trim();
+  const opponentScore = document.getElementById('opponentScore').value.trim();
+  const notes = document.getElementById('gameNotes').value.trim();
+  const photoInput = document.getElementById('gamePhoto');
+
+  if (!date || !teams || brotherScore === "" || opponentScore === "") {
+    alert('請填寫比賽日期、選擇對戰隊伍並輸入雙方得分！');
+    return;
+  }
+
+  const score = `${brotherScore}:${opponentScore}`;
+  let result = "";
+  if (parseInt(brotherScore) > parseInt(opponentScore)) {
+    result = "🎉 勝利";
+  } else if (parseInt(brotherScore) < parseInt(opponentScore)) {
+    result = "😢 落敗";
+  } else {
+    result = "🤝 平手";
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const photoData = e.target.result;
+    const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+    diaries.push({ date, teams, score, notes, result, photo: photoData });
+    localStorage.setItem('gameDiaries', JSON.stringify(diaries));
+    resetForm();
+    loadDiary();
+  };
+
+  if (photoInput.files.length > 0) {
+    reader.readAsDataURL(photoInput.files[0]);
+  } else {
+    const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+    diaries.push({ date, teams, score, notes, result, photo: "" });
+    localStorage.setItem('gameDiaries', JSON.stringify(diaries));
+    resetForm();
+    loadDiary();
+  }
+}
+
+function resetForm() {
+  document.getElementById('gameDate').value = '';
+  document.getElementById('gameTeams').value = '';
+  document.getElementById('brothersScore').value = '';
+  document.getElementById('opponentScore').value = '';
+  document.getElementById('gameNotes').value = '';
+  document.getElementById('gamePhoto').value = '';
+}
+
+function loadDiary(filter = "") {
+  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+  diaries.sort((a, b) => new Date(b.date) - new Date(a.date));
+  currentPhotoList = diaries.filter(d => d.photo);
+
+  const filteredDiaries = diaries.filter(d => {
+    const content = `${d.date} ${d.teams} ${d.score} ${d.notes} ${d.result}`.toLowerCase();
+    return content.includes(filter.toLowerCase());
+  });
+
+  const diaryList = document.getElementById('diaryList');
+  diaryList.innerHTML = filteredDiaries.map((d, index) => `
+    <div class="diary-item">
+      <strong>📅 ${d.date}</strong><br>
+      🆚 ${d.teams}<br>
+      🏟️ 比數：${d.score}<br>
+      ${d.notes ? `📝 心得：${d.notes}<br>` : ''}
+      <div style="font-weight:bold; margin-top:8px; ${d.result==='🎉 勝利' ? 'color:#faad14;' : (d.result==='😢 落敗' ? 'color:gray;' : 'color:blue;')}">
+        🏆 結果：${d.result}
+      </div>
+      ${d.photo ? `<img src="${d.photo}" alt="比賽照片" style="max-width:100%; margin-top:10px; border-radius:10px; cursor:pointer;" onclick="openModal(${currentPhotoList.indexOf(d)})">` : ''}
+    </div>
+  `).join('');
+
+  updateStats();
+}
+
+function searchDiary() {
+  const keyword = document.getElementById('searchInput').value;
+  loadDiary(keyword);
+}
+
+function updateStats() {
+  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+  let wins = 0, losses = 0, draws = 0;
+  diaries.forEach(d => {
+    if (d.result === "🎉 勝利") wins++;
+    else if (d.result === "😢 落敗") losses++;
+    else if (d.result === "🤝 平手") draws++;
+  });
+  document.getElementById('stats').textContent = `勝場 ${wins} | 敗場 ${losses} | 平手 ${draws}`;
+}
+
+function downloadDiary() {
+  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+  if (diaries.length === 0) {
+    alert('目前沒有任何比賽紀錄可以下載！');
+    return;
+  }
+
+  let content = '【比賽日記總覽】\\n\\n';
+  diaries.forEach((d, i) => {
+    content += `第 ${i+1} 場：\\n`;
+    content += `日期：${d.date}\\n`;
+    content += `對戰：${d.teams}\\n`;
+    content += `比數：${d.score}\\n`;
+    content += `結果：${d.result}\\n`;
+    if (d.notes) content += `心得：${d.notes}\\n`;
+    content += '\\n----------------------\\n\\n';
+  });
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '比賽日記總覽.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openModal(index) {
+  currentPhotoIndex = index;
+  const modal = document.getElementById('photoModal');
+  const img = document.getElementById('modalImage');
+  img.src = currentPhotoList[currentPhotoIndex].photo;
+  modal.style.display = 'flex';
+}
+
+function prevPhoto() {
+  if (currentPhotoList.length === 0) return;
+  currentPhotoIndex = (currentPhotoIndex - 1 + currentPhotoList.length) % currentPhotoList.length;
+  document.getElementById('modalImage').src = currentPhotoList[currentPhotoIndex].photo;
+}
+
+function nextPhoto() {
+  if (currentPhotoList.length === 0) return;
+  currentPhotoIndex = (currentPhotoIndex + 1) % currentPhotoList.length;
+  document.getElementById('modalImage').src = currentPhotoList[currentPhotoIndex].photo;
+}
+
+document.getElementById('photoModal').onclick = function(e) {
+  if (e.target.id === 'photoModal') {
+    this.style.display = 'none';
+  }
+};
+
+// 初始化
+loadDiary();
+</script>
+</body>
+</html>
