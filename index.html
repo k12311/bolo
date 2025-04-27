@@ -33,7 +33,6 @@
 </head>
 <body>
 <!-- 🔝 導覽列 -->
-<!-- 🔝 導覽列 -->
 <nav class="navbar">
   <div class="nav-left">
     <a href="index.html">🏠 主頁</a>
@@ -70,29 +69,6 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 </style>
-
-  .navbar {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: white;
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
-    font-family: 'Noto Sans TC', sans-serif;
-    flex-wrap: wrap;
-  }
-  .nav-left a {
-    margin: 0 15px;
-    font-size: 16px;
-    color: #444;
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  .nav-left a:hover {
-    color: #d48806;
-  }
-</style>
-
 <h1>中信兄弟每日語錄 🐘</h1>
 <p id="todayIs"></p>
 <div id="quote">✨ 今日語錄載入中...</div>
@@ -164,13 +140,15 @@ document.getElementById("quote").textContent = `✨ 今日語錄：${quotes[quot
 const futureGames = [
   { date: "2025-04-22", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
   { date: "2025-04-23", time: "18:35", info: "統一獅 vs 中信兄弟（台南）" },
-  { date: "2025-04-25", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋" },
-  { date: "2025-04-26", time: "17:35", info: "味全龍 vs 中信兄弟（大巨蛋" },
-  { date: "2025-04-27", time: "15:35", info: "味全龍 vs 中信兄弟（大巨蛋" }
+  { date: "2025-04-25", time: "18:35", info: "味全龍 vs 中信兄弟（大巨蛋）" },
+  { date: "2025-04-26", time: "17:35", info: "味全龍 vs 中信兄弟（大巨蛋）" },
+  { date: "2025-04-27", time: "15:35", info: "味全龍 vs 中信兄弟（大巨蛋）" }
+
 ];
 const todayGame = futureGames.find(g => g.date === dateStr);
 const gameInfo = todayGame ? `${todayGame.info}（${todayGame.time}）` : "今日無比賽，但兄弟魂持續燃燒🔥";
 document.getElementById("game").textContent = `📅 今日賽事：${gameInfo}`;
+document.getElementById("game").style.color = todayGame ? "#d48806" : "gray";
 
 function updateCountdown() {
   if (!todayGame) return;
@@ -280,8 +258,8 @@ function setReminder() {
   status.style.color = 'green';
   if (!todayGame) return;
   if (reminderTimeout !== null) clearTimeout(reminderTimeout);
-  const [h, m] = todayGame.time.split(":").map(Number);
-  const target = new Date(`${todayGame.date}T${h}:${m}:00`);
+  const [hour, minute] = todayGame.time.split(":").map(Number);
+  const target = new Date(`${todayGame.date}T${hour}:${minute}:00`);
   target.setMinutes(target.getMinutes() - mins);
   const now = new Date();
   const delay = target - now;
