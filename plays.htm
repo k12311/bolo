@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -5,6 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📝 比賽日記 - 兄弟語錄挑戰版</title>
   <link rel="icon" href="icon-192.png">
+
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyB4DjxxWFZvaN54loy0fzo010sxslXfMeg",
+  authDomain: "ffjj-67dcf.firebaseapp.com",
+  projectId: "ffjj-67dcf",
+  storageBucket: "ffjj-67dcf.firebasestorage.app",
+  messagingSenderId: "572382978762",
+  appId: "1:572382978762:web:f185509ed62c2543e5ca33",
+  measurementId: "G-K4KF8EH19G"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
   <style>
     body { font-family: 'Noto Sans TC', sans-serif; background: #fff9db; text-align: center; padding: 1rem; margin: 0; }
     h1, h2 { color: #d48806; margin-bottom: 1rem; }
@@ -24,7 +43,7 @@
 <nav class="navbar">
   <div class="nav-left">
     <a href="index.html">🏠 主頁</a>
-    <a href="plars.htm">🗕️ 賽程</a>
+    <a href="layers.html">🗕️ 賽程</a>
     <a href="plays.htm">📝 日記</a>
     <a href="players.html">🏅 球員</a>
     <a href="cheers.html">📖 啦啦隊</a>
@@ -34,7 +53,6 @@
 <div id="stats" style="margin-bottom:1rem; font-weight:bold; background:#fff7e6; padding:10px; border-radius:8px; color:#d48806;">勝場 0 | 敗場 0 | 平手 0</div>
 <h2>🔎 搜尋比賽紀錄</h2>
 <input type="text" id="searchInput" placeholder="輸入隊伍或比數關鍵字..." oninput="searchDiary()">
-<button onclick="downloadDiary()">📅 下載所有日記 (.txt)</button>
 <h1>📝 比賽記錄</h1>
 <input type="date" id="gameDate"><br>
 <select id="gameTeams">
@@ -64,8 +82,10 @@
   </div>
 </div>
 <script>
+// Firebase CRUD
 let currentPhotoIndex = 0;
 let currentPhotoList = [];
+let allDiaries = [];
 
 function saveDiary() {
   const date = document.getElementById('gameDate').value;
@@ -82,33 +102,50 @@ function saveDiary() {
 
   const score = `${brotherScore}:${opponentScore}`;
   let result = "";
-  if (parseInt(brotherScore) > parseInt(opponentScore)) {
-    result = "🎉 勝利";
-  } else if (parseInt(brotherScore) < parseInt(opponentScore)) {
-    result = "😢 落敗";
-  } else {
-    result = "🤝 平手";
-  }
+  if (parseInt(brotherScore) > parseInt(opponentScore)) result = "🎉 勝利";
+  else if (parseInt(brotherScore) < parseInt(opponentScore)) result = "😢 落敗";
+  else result = "🤝 平手";
 
   const reader = new FileReader();
   reader.onload = function (e) {
     const photoData = e.target.result;
-    const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
-    diaries.push({ date, teams, score, notes, result, photo: photoData });
-    localStorage.setItem('gameDiaries', JSON.stringify(diaries));
-    resetForm();
-    loadDiary();
+    db.collection("gameDiaries").add({ date, teams, score, notes, result, photo: photoData })
+      .then(() => { resetForm(); loadDiary(); });
   };
 
-  if (photoInput.files.length > 0) {
-    reader.readAsDataURL(photoInput.files[0]);
-  } else {
-    const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
-    diaries.push({ date, teams, score, notes, result, photo: "" });
-    localStorage.setItem('gameDiaries', JSON.stringify(diaries));
-    resetForm();
-    loadDiary();
-  }
+  if (photoInput.files.length > 0) reader.readAsDataURL(photoInput.files[0]);
+  else db.collection("gameDiaries").add({ date, teams, score, notes, result, photo: "" }).then(() => { resetForm(); loadDiary(); });
+}
+
+function loadDiary(filter = "") {
+  db.collection("gameDiaries").orderBy("date", "desc").get().then(snapshot => {
+    const diaries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    allDiaries = diaries;
+    currentPhotoList = diaries.filter(d => d.photo);
+
+    const filtered = diaries.filter(d => `${d.date} ${d.teams} ${d.score} ${d.notes} ${d.result}`.toLowerCase().includes(filter.toLowerCase()));
+    const diaryList = document.getElementById('diaryList');
+    diaryList.innerHTML = filtered.map((d, i) => `
+      <div class="diary-item">
+        <strong>📅 ${d.date}</strong><br>
+        🆚 ${d.teams}<br>
+        🏟️ 比數：${d.score}<br>
+        ${d.notes ? `📝 心得：${d.notes}<br>` : ''}
+        <div style="font-weight:bold; margin-top:8px; ${d.result==='🎉 勝利' ? 'color:#faad14;' : (d.result==='😢 落敗' ? 'color:gray;' : 'color:blue;')}">
+          🏆 結果：${d.result}
+        </div>
+        ${d.photo ? `<img src="${d.photo}" style="max-width:100%; margin-top:10px; border-radius:10px; cursor:pointer;" onclick="openModal(${currentPhotoList.indexOf(d)})">` : ''}
+        <button onclick="deleteDiary('${d.id}')" style="margin-top:10px; background:#ffccc7;">🗑️ 刪除</button>
+      </div>
+    `).join('');
+
+    updateStats(diaries);
+  });
+}
+
+function deleteDiary(id) {
+  if (!confirm("確定要刪除這筆紀錄嗎？")) return;
+  db.collection("gameDiaries").doc(id).delete().then(() => loadDiary());
 }
 
 function resetForm() {
@@ -120,40 +157,12 @@ function resetForm() {
   document.getElementById('gamePhoto').value = '';
 }
 
-function loadDiary(filter = "") {
-  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
-  diaries.sort((a, b) => new Date(b.date) - new Date(a.date));
-  currentPhotoList = diaries.filter(d => d.photo);
-
-  const filteredDiaries = diaries.filter(d => {
-    const content = `${d.date} ${d.teams} ${d.score} ${d.notes} ${d.result}`.toLowerCase();
-    return content.includes(filter.toLowerCase());
-  });
-
-  const diaryList = document.getElementById('diaryList');
-  diaryList.innerHTML = filteredDiaries.map((d, index) => `
-    <div class="diary-item">
-      <strong>📅 ${d.date}</strong><br>
-      🆚 ${d.teams}<br>
-      🏟️ 比數：${d.score}<br>
-      ${d.notes ? `📝 心得：${d.notes}<br>` : ''}
-      <div style="font-weight:bold; margin-top:8px; ${d.result==='🎉 勝利' ? 'color:#faad14;' : (d.result==='😢 落敗' ? 'color:gray;' : 'color:blue;')}">
-        🏆 結果：${d.result}
-      </div>
-      ${d.photo ? `<img src="${d.photo}" alt="比賽照片" style="max-width:100%; margin-top:10px; border-radius:10px; cursor:pointer;" onclick="openModal(${currentPhotoList.indexOf(d)})">` : ''}
-    </div>
-  `).join('');
-
-  updateStats();
-}
-
 function searchDiary() {
   const keyword = document.getElementById('searchInput').value;
   loadDiary(keyword);
 }
 
-function updateStats() {
-  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
+function updateStats(diaries) {
   let wins = 0, losses = 0, draws = 0;
   diaries.forEach(d => {
     if (d.result === "🎉 勝利") wins++;
@@ -161,33 +170,6 @@ function updateStats() {
     else if (d.result === "🤝 平手") draws++;
   });
   document.getElementById('stats').textContent = `勝場 ${wins} | 敗場 ${losses} | 平手 ${draws}`;
-}
-
-function downloadDiary() {
-  const diaries = JSON.parse(localStorage.getItem('gameDiaries') || '[]');
-  if (diaries.length === 0) {
-    alert('目前沒有任何比賽紀錄可以下載！');
-    return;
-  }
-
-  let content = '【比賽日記總覽】\\n\\n';
-  diaries.forEach((d, i) => {
-    content += `第 ${i+1} 場：\\n`;
-    content += `日期：${d.date}\\n`;
-    content += `對戰：${d.teams}\\n`;
-    content += `比數：${d.score}\\n`;
-    content += `結果：${d.result}\\n`;
-    if (d.notes) content += `心得：${d.notes}\\n`;
-    content += '\\n----------------------\\n\\n';
-  });
-
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = '比賽日記總覽.txt';
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function openModal(index) {
@@ -220,6 +202,6 @@ document.getElementById('photoModal').onclick = function(e) {
 loadDiary();
 </script>
 </body>
-</html>l>
+</html>
 
 
