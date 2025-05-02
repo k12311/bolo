@@ -1,6 +1,6 @@
 // 📦 PWA Service Worker for 中信兄弟語錄挑戰版
 
-const CACHE_NAME = 'brothers-cache-v12';
+const CACHE_NAME = 'brothers-cache-v13';
 const CACHE_FILES = [
   '/bolo/',
   '/bolo/index.html',
